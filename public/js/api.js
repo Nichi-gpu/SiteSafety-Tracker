@@ -4,9 +4,12 @@
  * Works seamlessly whether loaded via http://localhost:8000, VS Code Live Server, or file protocol.
  */
 const API = (() => {
-  // Determine API root URL automatically
-  const isFlaskPort = window.location.port === '8000';
-  const BASE = isFlaskPort ? '/api' : 'http://127.0.0.1:8000/api';
+  // Determine API root URL automatically:
+  // If running from file:// or a local dev server on a different port (like 5500 for Live Server), use localhost:8000.
+  // When served by Flask (port 8000 OR any deployed cloud domain like Render / production), use relative '/api'.
+  const isLocalDifferentHost = window.location.protocol === 'file:' || 
+    (window.location.hostname === 'localhost' && window.location.port && window.location.port !== '8000');
+  const BASE = isLocalDifferentHost ? 'http://127.0.0.1:8000/api' : '/api';
 
   let _isOnline = null;
 
