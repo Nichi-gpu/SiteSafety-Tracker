@@ -112,3 +112,25 @@ Safety audits and site walks (`title`, `location`, `inspector`, `date`, `time`, 
 - **Inspections & Notifications**:
   - `GET /api/inspections`, `POST /api/inspections`, `DELETE /api/inspections/<id>`
   - `GET /api/notifications`, `POST /api/notifications`, `POST /api/notifications/clear`
+- **Password Recovery**:
+  - `POST /api/auth/forgot-password` - Sends 6-digit verification code to registered email via Google SMTP
+  - `POST /api/auth/reset-password` - Verifies code and securely updates user password
+
+---
+
+## ☁️ 24/7 Cloud Deployment (Render.com)
+
+SiteSafety Tracker includes production configurations for instant deployment on [Render](https://render.com/):
+
+1. **Push to GitHub**: Push this repository to your GitHub account.
+2. **Create New Web Service on Render**:
+   - Link your GitHub repository.
+   - **Environment**: `Python 3`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `gunicorn --chdir server app:app`
+3. **Set Environment Variables in Render Dashboard**:
+   - `SMTP_EMAIL`: `sitesafetytracker@gmail.com`
+   - `SMTP_PASSWORD`: `vflu rrvs djps ihqt` (or your Google App Password)
+   - `PYTHON_VERSION`: `3.10.12`
+4. **Deploy**: Render will build and host your app on a live `https://your-app.onrender.com` URL accessible from any phone, tablet, or laptop 24/7!
+

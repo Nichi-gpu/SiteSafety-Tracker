@@ -41,10 +41,16 @@ CORS(app, supports_credentials=True)
 
 # Ensure DB initialized & seeded
 init_db()
-if not os.path.exists(os.path.join(os.path.dirname(__file__), 'sitesafety.db')):
-    print('[*] Initializing and seeding database...')
-    import seed
-    seed.seed()
+try:
+    _conn = get_db()
+    _user_count = _conn.execute('SELECT COUNT(*) FROM users').fetchone()[0]
+    _conn.close()
+    if _user_count == 0:
+        print('[*] Users table empty. Initializing and seeding default data...')
+        import seed
+        seed.seed()
+except Exception as _e:
+    print(f'[*] DB seed check: {_e}')
 
 # ── Static Files & Fallback ──────────────────────────────
 @app.route('/')
