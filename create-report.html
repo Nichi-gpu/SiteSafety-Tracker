@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SiteSafety Tracker - Hazard and Incident Reporting Page.">
+    <title>Create Report - SiteSafety Tracker</title>
+    <link rel="icon" href="logo.png" type="image/png">
+    <link rel="stylesheet" href="home.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Top Navbar -->
+    <header class="navbar">
+        <div class="nav-left">
+            <a href="home.html" title="SiteSafety Tracker">
+                <img src="logo.png" class="nav-logo" alt="SiteSafety Tracker Logo">
+            </a>
+            <div class="nav-titles">
+                <div class="nav-title-main">INCIDENT AND INSPECTION</div>
+                <div class="nav-title-sub">REPORTING SYSTEM</div>
+                <div class="nav-title-desc" id="nav-dashboard-subtitle">REPORTING PERSONNEL'S DASHBOARD</div>
+            </div>
+        </div>
+
+        <div class="nav-right">
+            <!-- Notification Bell with Yellow Dot -->
+            <button class="notif-btn" id="notif-btn" aria-label="Notifications" title="Notifications">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <span class="notif-badge"></span>
+            </button>
+
+            <!-- User Profile & Dropdown -->
+            <div class="user-profile" id="user-profile-btn" tabindex="0" role="button" aria-haspopup="true"
+                aria-expanded="false">
+                <div class="user-avatar-circle">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </div>
+                <div class="user-info">
+                    <span class="user-welcome">Welcome,</span>
+                    <div class="user-name-wrapper">
+                        <span class="user-name" id="display-account-name">Account Name</span>
+                        <svg class="user-caret" viewBox="0 0 24 24">
+                            <path d="M7 10l5 5 5-5z" />
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Dropdown -->
+                <div class="user-dropdown" id="user-dropdown">
+                    <a href="#" id="menu-profile">Profile Settings</a>
+                    <a href="#" id="menu-activity">Recent Activity</a>
+                    <a href="login.html" id="menu-signout">Sign Out</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- App Body (Sidebar + Main Content) -->
+    <div class="app-layout">
+        <!-- Left Sidebar -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav" aria-label="Main Navigation">
+                <a href="create-report.html" class="nav-item active" id="nav-create-report">
+                    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    <span>Create Report</span>
+                </a>
+
+                <a href="home.html" class="nav-item" id="nav-contact-directory">
+                    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <line x1="10" y1="9" x2="8" y2="9"></line>
+                    </svg>
+                    <span>Contact Directory</span>
+                </a>
+
+                <a href="report-history.html" class="nav-item" id="nav-report-history">
+                    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 8v4l3 3"></path>
+                        <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"></path>
+                    </svg>
+                    <span>Report History</span>
+                </a>
+
+                <a href="dashboard.html" class="nav-item" id="nav-dashboard">
+                    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+                        <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+                        <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+                        <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+
+                <a href="settings.html" class="nav-item" id="nav-settings">
+                    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                    <span>Settings</span>
+                </a>
+            </nav>
+
+            <!-- Sign Out (Bottom Sidebar) -->
+            <div class="sidebar-footer">
+                <button class="signout-btn" id="sidebar-signout-btn" title="Sign out of system">
+                    <div class="signout-left">
+                        <svg class="signout-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <div class="signout-info">
+                            <span class="signout-title">Sign out</span>
+                            <span class="signout-role" id="sidebar-role-label">Reporting Personnel</span>
+                        </div>
+                    </div>
+                    <svg class="signout-caret" viewBox="0 0 24 24">
+                        <path d="M7 10l5 5 5-5z" />
+                    </svg>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area: Hazard Reporting Page -->
+        <main class="main-content" id="main-content">
+            <!-- 1. Header Banner Card with Hazard Triangle -->
+            <section class="header-banner">
+                <div class="banner-left">
+                    <div class="hazard-triangle-art" title="Hazard Warning">
+                        <svg viewBox="0 0 54 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Yellow triangle with thick black border -->
+                            <path d="M27 3L2 45H52L27 3Z" fill="#FDD835" stroke="#1A1A1A" stroke-width="3.5"
+                                stroke-linejoin="round" />
+                            <!-- Exclamation Mark -->
+                            <path d="M27 17V30" stroke="#1A1A1A" stroke-width="4.5" stroke-linecap="round" />
+                            <circle cx="27" cy="37.5" r="2.5" fill="#1A1A1A" />
+                        </svg>
+                    </div>
+                    <div class="banner-text">
+                        <h1>Hazard Reporting Page</h1>
+                        <p>short description</p>
+                    </div>
+                </div>
+
+                <!-- Decorative Skyline Graphic -->
+                <div class="banner-skyline-art" aria-hidden="true">
+                    <svg width="180" height="46" viewBox="0 0 180 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M4 44V28H14V44M14 34H26V44M26 22H36V44M36 14H46V44M46 20H58V44M58 8H70V44M70 26H80V44M80 18H92V44M92 6H104V44M104 24H114V44M114 16H126V44M126 30H138V44M138 20H150V44M150 12H162V44M162 26H176V44"
+                            stroke="#8cbdf6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                        <line x1="64" y1="8" x2="64" y2="2" stroke="#8cbdf6" stroke-width="1.5" />
+                        <line x1="98" y1="6" x2="98" y2="1" stroke="#8cbdf6" stroke-width="1.5" />
+                        <line x1="156" y1="12" x2="156" y2="5" stroke="#8cbdf6" stroke-width="1.5" />
+                        <rect x="61" y="14" width="2" height="2" fill="#8cbdf6" />
+                        <rect x="65" y="14" width="2" height="2" fill="#8cbdf6" />
+                        <rect x="61" y="20" width="2" height="2" fill="#8cbdf6" />
+                        <rect x="65" y="20" width="2" height="2" fill="#8cbdf6" />
+                        <rect x="95" y="12" width="2" height="2" fill="#8cbdf6" />
+                        <rect x="99" y="12" width="2" height="2" fill="#8cbdf6" />
+                        <rect x="95" y="18" width="2" height="2" fill="#8cbdf6" />
+                        <rect x="99" y="18" width="2" height="2" fill="#8cbdf6" />
+                    </svg>
+                </div>
+            </section>
+
+            <!-- 2. Step 1: Incident Report Banner -->
+            <div class="step-banner">
+                <div class="step-number-circle">1</div>
+                <div class="step-title-group">
+                    <span class="step-title">Incident Report</span>
+                    <span class="step-divider">|</span>
+                    <span class="step-subtitle">Provide details about the incident</span>
+                </div>
+            </div>
+
+            <!-- 3. Form Sections Grid (Incident Details & Additional Details) -->
+            <form id="hazard-report-form">
+                <div class="report-columns-row">
+                    <!-- Left: Incident Details -->
+                    <div class="form-section-card">
+                        <div class="section-header-sky">Incident Details</div>
+                        <div class="section-body-white">
+                            <!-- Site / Project -->
+                            <div class="field-row-grid">
+                                <label class="field-label" for="report-location">Site / Project</label>
+                                <div class="input-icon-box">
+                                    <input type="text" id="report-location" placeholder="Select Location">
+                                    <button type="button" class="location-pin-btn" title="Pick Location">
+                                        <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                            <circle cx="12" cy="10" r="3"></circle>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Date and Time -->
+                            <div class="field-row-grid">
+                                <label class="field-label">Date and Time</label>
+                                <div class="datetime-dual-box">
+                                    <div class="input-icon-box">
+                                        <svg class="field-icon" viewBox="0 0 24 24" stroke="currentColor">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                                        </svg>
+                                        <input type="text" id="report-date" placeholder="MM-DD-YYYY">
+                                    </div>
+                                    <div class="input-icon-box time-box">
+                                        <input type="text" id="report-time" placeholder="00:00 AM/PM">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Category -->
+                            <div class="field-row-grid">
+                                <label class="field-label" for="report-category">Category</label>
+                                <select class="select-box-styled" id="report-category">
+                                    <option value="" selected disabled>Select a Category</option>
+                                    <option value="Slip / Trip / Fall">Slip / Trip / Fall</option>
+                                    <option value="Equipment Hazard">Equipment Hazard</option>
+                                    <option value="Structural Damage">Structural Damage</option>
+                                    <option value="Electrical Issue">Electrical Issue</option>
+                                    <option value="PPE Non-Compliance">PPE Non-Compliance</option>
+                                    <option value="Chemical Spill">Chemical Spill</option>
+                                    <option value="Fire Hazard">Fire Hazard</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Additional Details -->
+                    <div class="form-section-card">
+                        <div class="section-header-sky">Additional Details</div>
+                        <div class="section-body-white">
+                            <!-- Incident Cause -->
+                            <div class="stacked-field">
+                                <label class="field-label" for="report-cause">Incident Cause</label>
+                                <div class="input-cause-box">
+                                    <input type="text" id="report-cause" placeholder="Enter Incident Cause..">
+                                </div>
+                            </div>
+
+                            <!-- Urgency Level -->
+                            <div class="stacked-field">
+                                <label class="field-label">Urgency Level</label>
+                                <div class="urgency-pills-row" id="urgency-pills-group">
+                                    <button type="button" class="urgency-pill pill-low active"
+                                        data-urgency="Low">Low</button>
+                                    <button type="button" class="urgency-pill pill-medium"
+                                        data-urgency="Medium">Medium</button>
+                                    <button type="button" class="urgency-pill pill-critical"
+                                        data-urgency="Critical">Critical</button>
+                                </div>
+                            </div>
+
+                            <!-- Attach Photo Evidence -->
+                            <div class="stacked-field" style="margin-top: 10px;">
+                                <label class="field-label" for="report-photo-input">Attach Photo Evidence</label>
+                                <input type="file" id="report-photo-input" accept="image/*"
+                                    style="font-size: 11.5px; font-family: 'Poppins', sans-serif; color: #444; width: 100%; cursor: pointer;">
+                                <div id="photo-preview-box" class="evidence-preview-container"
+                                    style="display: none; margin-top: 6px;">
+                                    <img id="photo-preview-img" class="evidence-preview-thumb" alt="Evidence Preview">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Bottom: Reporting Personnel Section -->
+                <div class="form-section-card" style="margin-top: 18px;">
+                    <div class="section-header-green">Reporting Personnel</div>
+                    <div class="section-body-white">
+                        <div class="personnel-inputs-grid">
+                            <!-- Top Left: Contact Number -->
+                            <div class="personnel-input-box">
+                                <div class="personnel-badge-square"></div>
+                                <input type="text" id="personnel-phone" placeholder="Enter Contact Number">
+                            </div>
+
+                            <!-- Top Right: Position -->
+                            <div class="personnel-input-box">
+                                <div class="personnel-badge-square"></div>
+                                <input type="text" id="personnel-position" placeholder="Position">
+                            </div>
+
+                            <!-- Bottom Left: Surname, First Name M.I. -->
+                            <div class="personnel-input-box">
+                                <div class="personnel-badge-square">
+                                    <svg viewBox="0 0 24 24">
+                                        <path
+                                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+                                    </svg>
+                                </div>
+                                <input type="text" id="personnel-name" placeholder="Surname, First Name M.I.">
+                            </div>
+
+                            <!-- Bottom Right: Department -->
+                            <div class="personnel-input-box">
+                                <div class="personnel-badge-square"></div>
+                                <input type="text" id="personnel-dept" placeholder="Department">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Centered Action Buttons -->
+                <div class="form-actions-row">
+                    <button type="submit" class="btn-report-submit" id="btn-submit-report">Submit</button>
+                    <button type="button" class="btn-report-cancel" id="btn-cancel-report">Cancel</button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <!-- Interactive script -->
+    <script src="home.js"></script>
+</body>
+
+</html>

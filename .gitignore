@@ -1,0 +1,16 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Scratch & temporary testing files
+scratch/
+*.log
+
+# Environment variables (keeps credentials safe from GitHub)
+.env
+server/.env
+*.env
+
+# Keep the database file so your sample users & data deploy to Render
+# server/sitesafety.db is tracked

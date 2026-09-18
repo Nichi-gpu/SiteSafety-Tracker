@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SiteSafety Tracker - Administrator Resolved Hazards Management.">
+    <title>Resolved Hazard - Administrator Dashboard</title>
+    <link rel="icon" href="logo.png" type="image/png">
+    <link rel="stylesheet" href="home.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Top Navbar (Administrator's Dashboard) -->
+    <header class="navbar">
+        <div class="nav-left">
+            <a href="manager-home.html" title="SiteSafety Tracker Administrator Portal">
+                <img src="logo.png" class="nav-logo" alt="SiteSafety Tracker Logo">
+            </a>
+            <div class="nav-titles">
+                <div class="nav-title-main">INCIDENT AND INSPECTION</div>
+                <div class="nav-title-sub">MANAGEMENT SYSTEM</div>
+                <div class="nav-title-desc" id="nav-dashboard-subtitle">ADMINISTRATOR'S DASHBOARD</div>
+            </div>
+        </div>
+
+        <div class="nav-right">
+            <!-- Notification Bell with Yellow Dot -->
+            <button class="notif-btn" id="notif-btn" aria-label="Notifications" title="Notifications">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <span class="notif-badge"></span>
+            </button>
+
+            <!-- User Profile & Dropdown -->
+            <div class="user-profile" id="user-profile-btn" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">
+                <div class="user-avatar-circle">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </div>
+                <div class="user-info">
+                    <span class="user-welcome">Welcome,</span>
+                    <div class="user-name-wrapper">
+                        <span class="user-name" id="display-account-name">Account Name</span>
+                        <svg class="user-caret" viewBox="0 0 24 24">
+                            <path d="M7 10l5 5 5-5z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Dropdown -->
+                <div class="user-dropdown" id="user-dropdown">
+                    <a href="manager-settings.html" id="menu-profile">Profile Settings</a>
+                    <a href="manager-resolved.html" id="menu-activity">Resolved Records</a>
+                    <a href="login.html" id="menu-signout">Sign Out</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- App Body (Manager Sidebar: ONLY 4 ITEMS + Sign Out) -->
+    <div class="app-layout">
+        <!-- Left Sidebar: EXACTLY 4 ITEMS -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav" aria-label="Administrator Navigation">
+                <a href="manager-home.html" class="nav-item" id="nav-pending-hazard">
+                    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <line x1="10" y1="9" x2="8" y2="9"></line>
+                    </svg>
+                    <span>Pending Hazard</span>
+                </a>
+
+                <a href="manager-resolved.html" class="nav-item active" id="nav-resolved-hazard">
+                    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 8v4l3 3"></path>
+                        <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"></path>
+                    </svg>
+                    <span>Resolved Hazard</span>
+                </a>
+
+                <a href="manager-add-inspection.html" class="nav-item" id="nav-add-inspection">
+                    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+                        <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+                        <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+                        <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+                    </svg>
+                    <span>Add Inspection</span>
+                </a>
+
+                <a href="manager-settings.html" class="nav-item" id="nav-settings">
+                    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    <span>Settings</span>
+                </a>
+            </nav>
+
+            <!-- Sign Out (Bottom Sidebar) -->
+            <div class="sidebar-footer">
+                <button class="signout-btn" id="sidebar-signout-btn" title="Sign out of system">
+                    <div class="signout-left">
+                        <svg class="signout-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <div class="signout-info">
+                            <span class="signout-title">Sign out</span>
+                            <span class="signout-role" id="sidebar-role-label">Administrator</span>
+                        </div>
+                    </div>
+                    <svg class="signout-caret" viewBox="0 0 24 24">
+                        <path d="M7 10l5 5 5-5z"/>
+                    </svg>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area: Space Maximized -->
+        <main class="main-content" id="main-content">
+            <!-- 1. Header Banner Card with Green Check Circle & Skyline Art -->
+            <section class="header-banner">
+                <div class="banner-left">
+                    <div class="resolved-check-art" title="Resolved Hazard Alert">
+                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="24" cy="24" r="21" fill="#00a838" />
+                            <path d="M14 24.5L20.5 31L34 17.5" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <div class="banner-text">
+                        <h1>Resolved Hazard</h1>
+                        <p>short description</p>
+                    </div>
+                </div>
+
+                <!-- Decorative Skyline Graphic -->
+                <div class="banner-skyline-art" aria-hidden="true">
+                    <svg width="180" height="46" viewBox="0 0 180 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 44V28H14V44M14 34H26V44M26 22H36V44M36 14H46V44M46 20H58V44M58 8H70V44M70 26H80V44M80 18H92V44M92 6H104V44M104 24H114V44M114 16H126V44M126 30H138V44M138 20H150V44M150 12H162V44M162 26H176V44" stroke="#8cbdf6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="64" y1="8" x2="64" y2="2" stroke="#8cbdf6" stroke-width="1.5"/>
+                        <line x1="98" y1="6" x2="98" y2="1" stroke="#8cbdf6" stroke-width="1.5"/>
+                        <line x1="156" y1="12" x2="156" y2="5" stroke="#8cbdf6" stroke-width="1.5"/>
+                        <rect x="61" y="14" width="2" height="2" fill="#8cbdf6"/>
+                        <rect x="65" y="14" width="2" height="2" fill="#8cbdf6"/>
+                        <rect x="61" y="20" width="2" height="2" fill="#8cbdf6"/>
+                        <rect x="65" y="20" width="2" height="2" fill="#8cbdf6"/>
+                        <rect x="95" y="12" width="2" height="2" fill="#8cbdf6"/>
+                        <rect x="99" y="12" width="2" height="2" fill="#8cbdf6"/>
+                        <rect x="95" y="18" width="2" height="2" fill="#8cbdf6"/>
+                        <rect x="99" y="18" width="2" height="2" fill="#8cbdf6"/>
+                    </svg>
+                </div>
+            </section>
+
+            <!-- 2. Dark Navy Strip directly under the banner -->
+            <div class="manager-resolved-banner-strip"></div>
+
+            <!-- 3. White Outer Content Card -->
+            <div class="manager-outer-card" style="margin-top: 0;">
+                <!-- Filter Controls Row (Search ticket number | Location | Date Resolved) -->
+                <div class="resolved-filter-card">
+                    <!-- Search ticket number -->
+                    <div class="filter-input-box search-box">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" id="resolved-search-input" placeholder="Search ticket number" aria-label="Search ticket number">
+                    </div>
+
+                    <!-- Location Filter -->
+                    <div class="filter-input-box select-box">
+                        <select id="resolved-location-filter" aria-label="Filter by Location">
+                            <option value="all">Location</option>
+                            <option value="Site Alpha">Site Alpha</option>
+                            <option value="Site Beta">Site Beta</option>
+                            <option value="Site Gamma">Site Gamma</option>
+                            <option value="Site Delta">Site Delta</option>
+                            <option value="Site Epsilon">Site Epsilon</option>
+                            <option value="Site Zeta">Site Zeta</option>
+                        </select>
+                    </div>
+
+                    <!-- Date Resolved Filter -->
+                    <div class="filter-input-box select-box">
+                        <input type="text" id="resolved-date-filter" placeholder="Date Resolved" onfocus="(this.type='date')" onblur="if(!this.value)this.type='text'" aria-label="Filter by Date Resolved">
+                    </div>
+
+                    <!-- Export CSV Button -->
+                    <button type="button" class="btn-export-csv" id="btn-export-resolved-csv" title="Export resolved records to CSV" style="margin-left: auto;">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        <span>Export CSV</span>
+                    </button>
+                </div>
+
+                <!-- Table Header: Light Sky Blue with 2px Dark Border -->
+                <div class="manager-table-header header-resolved">
+                    <div>Ticket Number</div>
+                    <div>Location</div>
+                    <div>Category</div>
+                    <div>Date</div>
+                    <div>Status</div>
+                    <div></div>
+                </div>
+
+                <!-- 6 Alternating Hazard Rows (White & Sky-Blue) -->
+                <div class="manager-rows-list" id="manager-resolved-rows-list">
+                    <!-- Rows rendered dynamically by JavaScript -->
+                </div>
+
+                <!-- Centered Pagination Bar inside the card -->
+                <div class="pagination-container" id="manager-resolved-pagination" style="margin-top: 6px; margin-bottom: 4px;">
+                    <button class="page-btn page-arrow" id="resolved-prev-page" aria-label="Previous page">
+                        <svg viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7z"/></svg>
+                    </button>
+                    <button class="page-btn page-num active" data-page="1">1</button>
+                    <button class="page-btn page-num" data-page="2">2</button>
+                    <button class="page-btn page-num" data-page="3">3</button>
+                    <button class="page-btn page-arrow" id="resolved-next-page" aria-label="Next page">
+                        <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Interactive Script -->
+    <script src="home.js"></script>
+</body>
+</html>

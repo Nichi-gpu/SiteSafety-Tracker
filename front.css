@@ -1,0 +1,263 @@
+/* ============================================
+   Landing Page Styles (index.html)
+   Exact match to the updated Canva mockup
+   Targets user's exact HTML classes:
+   .logo, .welcome, .wc, .divider, .role,
+   .roles-container, .manager, .manager-img,
+   .staff, .staff-img, .role-label,
+   .submit-container, .submit-btn
+   ============================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(ellipse at 85% 20%, #2a34b4 0%, #152478 40%, #0d164e 70%, #040516 100%);
+  background-attachment: fixed;
+  color: #ffffff;
+}
+
+/* City Skyline Silhouette across bottom */
+body::after {
+  content: '';
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 210px;
+  background-image: url('skyline-tinted.png');
+  background-repeat: repeat-x;
+  background-position: bottom center;
+  background-size: contain;
+  opacity: 0.92;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ---- Logo in Upper-Left ---- */
+.logo {
+  position: absolute;
+  top: 30px;
+  left: 48px;
+  width: 98px;
+  height: auto;
+  z-index: 10;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.45));
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.logo:hover {
+  transform: scale(1.05);
+}
+
+/* ---- Welcome Heading ---- */
+.welcome {
+  position: relative;
+  z-index: 5;
+  text-align: center;
+  margin-top: -30px;
+  margin-bottom: 20px;
+}
+
+.welcome .wc {
+  font-size: 42px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* ---- Divider with Instruction ---- */
+.divider {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 40px;
+  width: 100%;
+  max-width: 620px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  height: 2px;
+  width: 135px;
+  background-color: #ffffff;
+  border-radius: 2px;
+  opacity: 0.95;
+}
+
+.divider .role {
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+/* ---- Roles Container ---- */
+.roles-container {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 75px;
+  margin-bottom: 38px;
+}
+
+.manager,
+.staff {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+}
+
+/* Card image container: rounded blue square card with icon inside */
+.manager-img,
+.staff-img {
+  width: 172px;
+  height: 142px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #10266e 0%, #1a3a8e 45%, #2e5bc9 100%);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+  padding: 20px 24px;
+  object-fit: contain;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+/* Unselected role card sits slightly quieter */
+.manager:not(.selected),
+.staff:not(.selected) {
+  opacity: 0.78;
+}
+
+/* Hover state on unselected card */
+.manager:not(.selected):hover,
+.staff:not(.selected):hover {
+  opacity: 0.95;
+  transform: translateY(-2px);
+}
+
+.manager:not(.selected):hover .manager-img,
+.staff:not(.selected):hover .staff-img {
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Click press feedback */
+.manager:active .manager-img,
+.staff:active .staff-img {
+  transform: scale(0.96);
+}
+
+/* Selected state: Crisp 2px solid white border, slight lift, deep shadow (clean, no neon haze) */
+.manager.selected,
+.staff.selected {
+  opacity: 1;
+  transform: translateY(-4px);
+}
+
+.manager.selected .manager-img,
+.staff.selected .staff-img {
+  border: 2px solid #ffffff;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+}
+
+/* Label below card */
+.role-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 12px;
+  transition: all 0.25s ease;
+}
+
+.manager.selected .role-label,
+.staff.selected .role-label {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* ---- Submit Button ---- */
+.submit-container {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+}
+
+.submit-btn {
+  background-color: #ffffff;
+  color: #000000;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  border: 2px solid #000000;
+  border-radius: 6px;
+  padding: 6px 36px;
+  cursor: pointer;
+  letter-spacing: 0.2px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  outline: none;
+}
+
+.submit-btn:hover {
+  background-color: #f1f5f9;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+
+.submit-btn:active {
+  transform: translateY(1px);
+}
+
+/* Responsive */
+@media (max-width: 650px) {
+  .logo {
+    top: 20px;
+    left: 20px;
+    width: 76px;
+  }
+  .welcome .wc {
+    font-size: 32px;
+  }
+  .divider::before,
+  .divider::after {
+    width: 60px;
+  }
+  .divider .role {
+    font-size: 13px;
+  }
+  .roles-container {
+    gap: 30px;
+  }
+  .manager-img,
+  .staff-img {
+    width: 130px;
+    height: 125px;
+    padding: 24px;
+  }
+}

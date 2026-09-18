@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SiteSafety Tracker - Incident Report Status and Confirmation.">
+    <title>Report Status - SiteSafety Tracker</title>
+    <link rel="icon" href="logo.png" type="image/png">
+    <link rel="stylesheet" href="home.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Top Navbar -->
+    <header class="navbar">
+        <div class="nav-left">
+            <a href="home.html" title="SiteSafety Tracker">
+                <img src="logo.png" class="nav-logo" alt="SiteSafety Tracker Logo">
+            </a>
+            <div class="nav-titles">
+                <div class="nav-title-main">INCIDENT AND INSPECTION</div>
+                <div class="nav-title-sub">REPORTING SYSTEM</div>
+                <div class="nav-title-desc" id="nav-dashboard-subtitle">REPORTING PERSONNEL'S DASHBOARD</div>
+            </div>
+        </div>
+
+        <div class="nav-right">
+            <!-- Notification Bell with Yellow Dot -->
+            <button class="notif-btn" id="notif-btn" aria-label="Notifications" title="Notifications">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <span class="notif-badge"></span>
+            </button>
+
+            <!-- User Profile & Dropdown -->
+            <div class="user-profile" id="user-profile-btn" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">
+                <div class="user-avatar-circle">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </div>
+                <div class="user-info">
+                    <span class="user-welcome">Welcome,</span>
+                    <div class="user-name-wrapper">
+                        <span class="user-name" id="display-account-name">Account Name</span>
+                        <svg class="user-caret" viewBox="0 0 24 24">
+                            <path d="M7 10l5 5 5-5z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Dropdown -->
+                <div class="user-dropdown" id="user-dropdown">
+                    <a href="#" id="menu-profile">Profile Settings</a>
+                    <a href="#" id="menu-activity">Recent Activity</a>
+                    <a href="login.html" id="menu-signout">Sign Out</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- App Body (Sidebar + Main Content) -->
+    <div class="app-layout">
+        <!-- Left Sidebar -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav" aria-label="Main Navigation">
+                <a href="create-report.html" class="nav-item active" id="nav-create-report">
+                    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    <span>Create Report</span>
+                </a>
+
+                <a href="home.html" class="nav-item" id="nav-contact-directory">
+                    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <line x1="10" y1="9" x2="8" y2="9"></line>
+                    </svg>
+                    <span>Contact Directory</span>
+                </a>
+
+                <a href="report-history.html" class="nav-item" id="nav-report-history">
+                    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 8v4l3 3"></path>
+                        <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"></path>
+                    </svg>
+                    <span>Report History</span>
+                </a>
+
+                <a href="dashboard.html" class="nav-item" id="nav-dashboard">
+                    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+                        <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+                        <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+                        <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+
+                <a href="settings.html" class="nav-item" id="nav-settings">
+                    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    <span>Settings</span>
+                </a>
+            </nav>
+
+            <!-- Sign Out (Bottom Sidebar) -->
+            <div class="sidebar-footer">
+                <button class="signout-btn" id="sidebar-signout-btn" title="Sign out of system">
+                    <div class="signout-left">
+                        <svg class="signout-icon" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                        <div class="signout-info">
+                            <span class="signout-title">Sign out</span>
+                            <span class="signout-role" id="sidebar-role-label">Reporting Personnel</span>
+                        </div>
+                    </div>
+                    <svg class="signout-caret" viewBox="0 0 24 24">
+                        <path d="M7 10l5 5 5-5z"/>
+                    </svg>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area: Hazard Reporting Step 2 -->
+        <main class="main-content" id="main-content">
+            <!-- 1. Header Banner Card with Hazard Triangle -->
+            <section class="header-banner">
+                <div class="banner-left">
+                    <div class="hazard-triangle-art" title="Hazard Warning">
+                        <svg viewBox="0 0 54 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M27 3L2 45H52L27 3Z" fill="#FDD835" stroke="#1A1A1A" stroke-width="3.5" stroke-linejoin="round"/>
+                            <path d="M27 17V30" stroke="#1A1A1A" stroke-width="4.5" stroke-linecap="round"/>
+                            <circle cx="27" cy="37.5" r="2.5" fill="#1A1A1A"/>
+                        </svg>
+                    </div>
+                    <div class="banner-text">
+                        <h1>Hazard Reporting Page</h1>
+                        <p>short description</p>
+                    </div>
+                </div>
+
+                <!-- Decorative Skyline Graphic -->
+                <div class="banner-skyline-art" aria-hidden="true">
+                    <svg width="180" height="46" viewBox="0 0 180 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 44V28H14V44M14 34H26V44M26 22H36V44M36 14H46V44M46 20H58V44M58 8H70V44M70 26H80V44M80 18H92V44M92 6H104V44M104 24H114V44M114 16H126V44M126 30H138V44M138 20H150V44M150 12H162V44M162 26H176V44" stroke="#8cbdf6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="64" y1="8" x2="64" y2="2" stroke="#8cbdf6" stroke-width="1.5"/>
+                        <line x1="98" y1="6" x2="98" y2="1" stroke="#8cbdf6" stroke-width="1.5"/>
+                        <line x1="156" y1="12" x2="156" y2="5" stroke="#8cbdf6" stroke-width="1.5"/>
+                        <rect x="61" y="14" width="2" height="2" fill="#8cbdf6"/>
+                        <rect x="65" y="14" width="2" height="2" fill="#8cbdf6"/>
+                        <rect x="61" y="20" width="2" height="2" fill="#8cbdf6"/>
+                        <rect x="65" y="20" width="2" height="2" fill="#8cbdf6"/>
+                        <rect x="95" y="12" width="2" height="2" fill="#8cbdf6"/>
+                        <rect x="99" y="12" width="2" height="2" fill="#8cbdf6"/>
+                        <rect x="95" y="18" width="2" height="2" fill="#8cbdf6"/>
+                        <rect x="99" y="18" width="2" height="2" fill="#8cbdf6"/>
+                    </svg>
+                </div>
+            </section>
+
+            <!-- 2. Step 1 -> Step 2 Progress Stepper Banner -->
+            <div class="step2-banner">
+                <!-- Step 1 Node -->
+                <div class="step-node">
+                    <div class="step-node-circle">1</div>
+                    <div class="step-node-info">
+                        <span class="step-node-title">Incident Report</span>
+                        <span class="step-node-sub">Review your report</span>
+                    </div>
+                </div>
+
+                <!-- Connecting Progress Bar -->
+                <div class="step-connecting-bar">
+                    <div class="step-connecting-fill"></div>
+                </div>
+
+                <!-- Step 2 Node -->
+                <div class="step-node">
+                    <div class="step-node-circle">2</div>
+                    <div class="step-node-info">
+                        <span class="step-node-title">Report Status</span>
+                        <span class="step-node-sub">Confirmation and next steps</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Main Step 2 Layout: Side-by-Side Panels (Space-Maximized) -->
+            <div class="step2-layout-row">
+                <!-- LEFT PANEL: Report Preview -->
+                <div class="cream-panel">
+                    <div class="preview-panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div class="preview-badge-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <line x1="10" y1="9" x2="8" y2="9"></line>
+                                </svg>
+                            </div>
+                            <div class="preview-title-group">
+                                <h2>Report Preview</h2>
+                                <p>Please review your submitted report details</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-print-doc" id="btn-print-report" title="Print or Save PDF" onclick="window.print()">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                                <rect x="6" y="14" width="12" height="8"></rect>
+                            </svg>
+                            <span>Print PDF</span>
+                        </button>
+                    </div>
+
+                    <!-- Inner Printable Document Sheet -->
+                    <div class="preview-document-sheet" id="preview-doc-sheet">
+                        <div class="doc-header-center">
+                            <div class="doc-company-name" id="doc-company-name">Company Name</div>
+                            <div class="doc-form-type">Incident Report</div>
+                        </div>
+
+                        <!-- Details Table -->
+                        <table class="doc-table">
+                            <tr>
+                                <td style="width: 32%; font-weight: 600;">Site / Project:</td>
+                                <td id="doc-site">West Wing Construction - Sector 4</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 600;">Date and Time:</td>
+                                <td id="doc-datetime">09-16-2026 | 02:45 PM</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 600;">Category:</td>
+                                <td id="doc-category">Structural Hazard</td>
+                            </tr>
+                        </table>
+
+                        <div class="doc-section-heading">Description of the Incident</div>
+                        <table class="doc-table">
+                            <tr>
+                                <th style="width: 35%;">Incident Category</th>
+                                <td id="doc-cat-desc">Structural Hazard</td>
+                            </tr>
+                            <tr>
+                                <th>Additional Details</th>
+                                <td id="doc-add-details">Loose scaffolding detected near main loading dock entry.</td>
+                            </tr>
+                            <tr>
+                                <th>Urgency Level</th>
+                                <td id="doc-urgency" style="font-weight: 700; color: #b91c1c;">Critical</td>
+                            </tr>
+                            <tr>
+                                <th colspan="2">Incident Photo</th>
+                            </tr>
+                            <tr>
+                                <td colspan="2">
+                                    <div class="doc-photo-box" id="doc-photo-container">[Attached Photographic Evidence Area]</div>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Cause & Recommendation -->
+                        <table class="doc-table">
+                            <tr>
+                                <th style="width: 50%;">INCIDENT CAUSE</th>
+                                <th style="width: 50%;">FOLLOW-UP/RECOMMENDATION</th>
+                            </tr>
+                            <tr>
+                                <td id="doc-cause" style="height: 38px;">Heavy wind gusts compromised connector joints on lower scaffolding level.</td>
+                                <td style="height: 38px;">Immediate cordon and structural re-tightening by scaffolding safety team.</td>
+                            </tr>
+                        </table>
+
+                        <!-- Signatures & Reporting Personnel -->
+                        <table class="doc-table">
+                            <tr>
+                                <th style="width: 50%;">REPORTED BY:</th>
+                                <th style="width: 50%;">SAFETY PERSONNEL:</th>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div><strong>Name:</strong> <span id="doc-rep-name">John Santos</span></div>
+                                    <div><strong>Position:</strong> <span id="doc-rep-pos">Lead Safety Officer</span></div>
+                                    <div><strong>Department:</strong> <span id="doc-rep-dept">Security / Safety</span></div>
+                                </td>
+                                <td>
+                                    <div><strong>Name:</strong> Site Safety Manager</div>
+                                    <div><strong>Position:</strong> HSE Supervisor</div>
+                                    <div><strong>Department:</strong> Health & Safety</div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Vertical Divider Line -->
+                <div class="vertical-divider-bar"></div>
+
+                <!-- RIGHT PANEL: Report Status -->
+                <div class="cream-panel">
+                    <div class="status-panel-inner">
+                        <!-- Green Success Box -->
+                        <div class="success-banner-green">
+                            <div class="success-check-circle">✓</div>
+                            <div class="success-banner-text">
+                                <h3>Report Submitted Successfully!</h3>
+                                <p>Please wait for more updates. Thank you for your cooperation!</p>
+                            </div>
+                        </div>
+
+                        <!-- Submission Date & Time Box -->
+                        <div class="submission-time-card">
+                            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                                <circle cx="8" cy="14" r="1"></circle>
+                                <circle cx="12" cy="14" r="1"></circle>
+                                <circle cx="16" cy="14" r="1"></circle>
+                                <circle cx="8" cy="18" r="1"></circle>
+                                <circle cx="12" cy="18" r="1"></circle>
+                            </svg>
+                            <div class="submission-time-info">
+                                <h4>Submission Date & Time</h4>
+                                <p id="status-submission-timestamp">September 16, 2026 | 02:45 PM</p>
+                            </div>
+                        </div>
+
+                        <!-- New Report Box -->
+                        <div class="new-report-card">
+                            <div class="new-report-heading">
+                                <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                                </svg>
+                                <span>New Report</span>
+                            </div>
+                            <button type="button" class="btn-submit-another" id="btn-submit-another-page">
+                                <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                                </svg>
+                                <span>Submit Another Report</span>
+                            </button>
+                        </div>
+
+                        <!-- 4-Step Status Tracker Stepper -->
+                        <div class="status-tracker-row">
+                            <!-- 1. Received -->
+                            <div class="tracker-step active">
+                                <div class="tracker-icon-badge">
+                                    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    </svg>
+                                </div>
+                                <span class="tracker-label">Received</span>
+                                <span class="tracker-date" id="tracker-received-date">09/16/26</span>
+                            </div>
+
+                            <div class="tracker-line"></div>
+
+                            <!-- 2. In Review -->
+                            <div class="tracker-step">
+                                <div class="tracker-icon-badge">
+                                    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    </svg>
+                                </div>
+                                <span class="tracker-label">In review</span>
+                                <span class="tracker-date">Pending</span>
+                            </div>
+
+                            <div class="tracker-line"></div>
+
+                            <!-- 3. In Review (Inspection) -->
+                            <div class="tracker-step">
+                                <div class="tracker-icon-badge">
+                                    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                    </svg>
+                                </div>
+                                <span class="tracker-label">In review</span>
+                                <span class="tracker-date">Pending</span>
+                            </div>
+
+                            <div class="tracker-line"></div>
+
+                            <!-- 4. Resolved -->
+                            <div class="tracker-step">
+                                <div class="tracker-icon-badge">
+                                    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                    </svg>
+                                </div>
+                                <span class="tracker-label">Resolved</span>
+                                <span class="tracker-date">Pending</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Centered Action Buttons -->
+            <div class="form-actions-row">
+                <button type="button" class="btn-report-submit" id="btn-status-done">Submit</button>
+                <button type="button" class="btn-report-cancel" id="btn-status-cancel">Cancel</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Interactive script -->
+    <script src="home.js"></script>
+</body>
+</html>

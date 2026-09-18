@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Create your SiteSafety Tracker account - Sign up for construction site safety management.">
+    <title>Sign Up - SiteSafety Tracker</title>
+    <link rel="icon" href="logo.png" type="image/png">
+    <link rel="stylesheet" href="auth.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Top-Left Brand Logo -->
+    <a href="index.html" class="auth-top-logo-link" title="SiteSafety Tracker">
+        <img src="logo.png" class="auth-top-logo" alt="SiteSafety Tracker Logo">
+    </a>
+
+    <!-- Center Signup Panel -->
+    <main class="auth-panel">
+        <!-- Top Section: Avatar Circle -->
+        <div class="auth-top-section">
+            <div class="auth-avatar-circle">
+                <img src="manager_clean_icon.png" class="auth-avatar-icon" id="role-icon" alt="Selected role icon">
+            </div>
+        </div>
+
+        <!-- Horizontal Divider Line -->
+        <div class="auth-divider-line"></div>
+
+        <!-- Bottom Section: Form Controls -->
+        <div class="auth-bottom-section">
+            <form class="auth-form" id="signup-form" novalidate>
+                <!-- Company Input -->
+                <div class="auth-input-group">
+                    <input type="text" id="signup-company" class="auth-input-pill" placeholder="Company*" required>
+                </div>
+
+                <!-- Username Input -->
+                <div class="auth-input-group">
+                    <input type="text" id="signup-username" class="auth-input-pill" placeholder="Username*" required autocomplete="username">
+                </div>
+
+                <!-- Email Input -->
+                <div class="auth-input-group">
+                    <input type="email" id="signup-email" class="auth-input-pill" placeholder="Email*" required autocomplete="email">
+                </div>
+
+                <!-- Password Input -->
+                <div class="auth-input-group">
+                    <input type="password" id="signup-password" class="auth-input-pill" placeholder="Password*" required autocomplete="new-password">
+                </div>
+
+                <!-- Verify Checkbox Row -->
+                <div class="auth-options-row">
+                    <label class="remember-label">
+                        <input type="checkbox" id="verify-checkbox" class="auth-checkbox" required>
+                        <span>Verify account credentials</span>
+                    </label>
+                </div>
+
+                <!-- SIGN UP Button -->
+                <div class="auth-submit-row">
+                    <button type="submit" class="btn-auth-submit" id="signup-btn">SIGN UP</button>
+                </div>
+
+                <!-- Sign in Link -->
+                <p class="auth-switch-text">
+                    Already have an account? <a href="login.html" class="auth-switch-link">Log in!</a>
+                </p>
+            </form>
+        </div>
+    </main>
+
+    <script src="api.js"></script>
+    <script src="auth.js"></script>
+</body>
+</html>
