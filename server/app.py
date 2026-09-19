@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify, session, send_from_directory, Response, render_template_string
+from flask import Flask, request, jsonify, session, send_from_directory, Response, render_template_string, redirect
+from functools import wraps
 from flask_cors import CORS
 import bcrypt
 import os
@@ -7,6 +8,7 @@ import io
 import csv
 from datetime import datetime, timedelta
 import random
+import secrets
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -33,11 +35,49 @@ for env_path in [os.path.join(os.path.dirname(__file__), '.env'), os.path.join(o
             pass
 
 WORKSPACE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-PUBLIC_DIR = os.path.join(WORKSPACE_ROOT, 'public')
 
 app = Flask(__name__, static_folder=WORKSPACE_ROOT, static_url_path='')
-app.secret_key = 'sitesafety-tracker-secret-key-2026'
+app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=8)
 CORS(app, supports_credentials=True)
+
+# ── Auth Guards ──────────────────────────────────────────
+def login_required(f):
+    """Decorator: rejects requests if user is not authenticated via session."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'userId' not in session:
+            return jsonify({"error": "Authentication required. Please log in."}), 401
+        return f(*args, **kwargs)
+    return decorated
+
+def manager_required(f):
+    """Decorator: rejects requests if user is not an authenticated manager."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'userId' not in session:
+            return jsonify({"error": "Authentication required. Please log in."}), 401
+        if session.get('role') != 'manager':
+            return jsonify({"error": "Access denied. Manager privileges required."}), 403
+        return f(*args, **kwargs)
+    return decorated
+
+def esc(val):
+    """Escape user-supplied values for safe HTML rendering (XSS protection)."""
+    if val is None:
+        return ''
+    from markupsafe import escape as _escape
+    return str(_escape(str(val)))
+
+def safe_int(val, default=1, min_val=1, max_val=1000):
+    """Safely parse integer query parameters with bounds checking to prevent 500 crashes."""
+    try:
+        n = int(val)
+        return max(min_val, min(n, max_val))
+    except (ValueError, TypeError):
+        return default
 
 # Ensure DB initialized & seeded
 init_db()
@@ -55,30 +95,19 @@ except Exception as _e:
 # ── Static Files & Fallback ──────────────────────────────
 @app.route('/')
 def index():
-    if os.path.exists(os.path.join(WORKSPACE_ROOT, 'index.html')):
-        return send_from_directory(WORKSPACE_ROOT, 'index.html')
-    return send_from_directory(PUBLIC_DIR, 'index.html')
+    return send_from_directory(WORKSPACE_ROOT, 'index.html')
 
 @app.route('/<path:path>')
 def serve_static(path):
-    # Check project root first (where active development happens)
     root_path = os.path.join(WORKSPACE_ROOT, path)
     if os.path.exists(root_path) and os.path.isfile(root_path):
         return send_from_directory(WORKSPACE_ROOT, path)
-    
-    # Check public folder second
-    public_path = os.path.join(PUBLIC_DIR, path)
-    if os.path.exists(public_path) and os.path.isfile(public_path):
-        return send_from_directory(PUBLIC_DIR, path)
         
     # If looking for an HTML page without extension
     if '.' not in path:
         html_root = os.path.join(WORKSPACE_ROOT, f"{path}.html")
         if os.path.exists(html_root):
             return send_from_directory(WORKSPACE_ROOT, f"{path}.html")
-        html_pub = os.path.join(PUBLIC_DIR, f"{path}.html")
-        if os.path.exists(html_pub):
-            return send_from_directory(PUBLIC_DIR, f"{path}.html")
 
     return "File not found", 404
 
@@ -221,6 +250,7 @@ def login():
             (user['id'], user['username'], user['email'], user['role'], now_str, ip, ua)
         )
 
+    session.permanent = True
     session['userId'] = user['id']
     session['username'] = user['username']
     session['email'] = user['email']
@@ -380,8 +410,8 @@ def forgot_password():
 
     target_email = user['email'].lower()
 
-    # Generate 6-digit verification code
-    code = f"{random.randint(100000, 999999)}"
+    # Generate 6-digit verification code using cryptographically secure secrets module
+    code = f"{secrets.randbelow(900000) + 100000}"
     expires_at = (datetime.now() + timedelta(minutes=15)).strftime("%Y-%m-%d %H:%M:%S")
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -458,6 +488,7 @@ def reset_password():
 
 
 @app.route('/api/admin/users')
+@manager_required
 def list_users():
     conn = get_db()
     rows = conn.execute(
@@ -466,8 +497,9 @@ def list_users():
     ).fetchall()
     return jsonify({"users": [dict(r) for r in rows]})
 @app.route('/api/admin/login-logs')
+@manager_required
 def list_login_logs():
-    limit = int(request.args.get('limit', 100))
+    limit = safe_int(request.args.get('limit'), default=100, min_val=1, max_val=500)
     conn = get_db()
     rows = conn.execute(
         '''SELECT id, user_id, username, email, role, action, status, timestamp, ip_address, details 
@@ -479,6 +511,11 @@ def list_login_logs():
 # ── Interactive Database Viewer (Web UI - Dark Theme) ─────
 @app.route('/db-viewer')
 def db_viewer():
+    # Require manager-level authentication to access DB viewer
+    if 'userId' not in session:
+        return redirect('/login.html')
+    if session.get('role') != 'manager':
+        return redirect('/home.html')
     conn = get_db()
     users = conn.execute("SELECT id, username, email, role, company, signup_time, last_login_time, login_count FROM users ORDER BY id ASC").fetchall()
     logs = conn.execute("SELECT id, user_id, username, email, role, action, status, timestamp, ip_address, details FROM login_logs ORDER BY id DESC LIMIT 150").fetchall()
@@ -896,15 +933,15 @@ def db_viewer():
     
     for u in users:
         role_badge = 'badge-manager' if u['role'] == 'manager' else 'badge-staff'
-        last_log = u['last_login_time'] or '<span class="empty-cell">Never</span>'
+        last_log = esc(u['last_login_time']) or '<span class="empty-cell">Never</span>'
         html += f'''
                             <tr>
                                 <td class="mono">#{u['id']}</td>
-                                <td><strong>{u['username']}</strong></td>
-                                <td class="mono">{u['email']}</td>
-                                <td><span class="badge {role_badge}">{u['role']}</span></td>
-                                <td>{u['company'] or '<span class="empty-cell">N/A</span>'}</td>
-                                <td class="mono">{u['signup_time']}</td>
+                                <td><strong>{esc(u['username'])}</strong></td>
+                                <td class="mono">{esc(u['email'])}</td>
+                                <td><span class="badge {role_badge}">{esc(u['role'])}</span></td>
+                                <td>{esc(u['company']) or '<span class="empty-cell">N/A</span>'}</td>
+                                <td class="mono">{esc(u['signup_time'])}</td>
                                 <td class="mono">{last_log}</td>
                                 <td class="mono"><strong>{u['login_count']}</strong></td>
                             </tr>'''
@@ -965,13 +1002,13 @@ def db_viewer():
         html += f'''
                             <tr>
                                 <td class="mono">#{l['id']}</td>
-                                <td><span class="action-tag {act_cls}">{l['action']}</span></td>
-                                <td style="color:{status_color}; font-weight:600; font-size:11px;">{l['status']}</td>
-                                <td><strong>{l['username'] or l['email'] or 'System'}</strong></td>
-                                <td><span class="badge {'badge-manager' if role_label=='manager' else 'badge-staff'}">{role_label}</span></td>
-                                <td class="mono">{l['timestamp']}</td>
-                                <td class="mono">{l['ip_address'] or '<span class="empty-cell">local</span>'}</td>
-                                <td>{l['details']}</td>
+                                <td><span class="action-tag {act_cls}">{esc(l['action'])}</span></td>
+                                <td style="color:{status_color}; font-weight:600; font-size:11px;">{esc(l['status'])}</td>
+                                <td><strong>{esc(l['username'] or l['email'] or 'System')}</strong></td>
+                                <td><span class="badge {'badge-manager' if role_label=='manager' else 'badge-staff'}">{esc(role_label)}</span></td>
+                                <td class="mono">{esc(l['timestamp'])}</td>
+                                <td class="mono">{esc(l['ip_address']) or '<span class="empty-cell">local</span>'}</td>
+                                <td>{esc(l['details'])}</td>
                             </tr>'''
 
     html += f'''
@@ -1009,14 +1046,14 @@ def db_viewer():
         urg_cls = f'urgency-{urg}' if urg in ['high', 'medium', 'low'] else 'urgency-medium'
         html += f'''
                             <tr>
-                                <td class="mono"><strong>{h['ticket']}</strong></td>
-                                <td>{h['location']}</td>
-                                <td>{h['category']}</td>
-                                <td><span class="{urg_cls}">{h['urgency']}</span></td>
-                                <td><span class="badge {status_cls}">{h['status']}</span></td>
-                                <td>{h['reporter_name'] or '<span class="empty-cell">N/A</span>'}</td>
-                                <td class="mono">{h['date']} {h['time']}</td>
-                                <td>{h['cause'] or '<span class="empty-cell">No details provided</span>'}</td>
+                                <td class="mono"><strong>{esc(h['ticket'])}</strong></td>
+                                <td>{esc(h['location'])}</td>
+                                <td>{esc(h['category'])}</td>
+                                <td><span class="{urg_cls}">{esc(h['urgency'])}</span></td>
+                                <td><span class="badge {status_cls}">{esc(h['status'])}</span></td>
+                                <td>{esc(h['reporter_name']) or '<span class="empty-cell">N/A</span>'}</td>
+                                <td class="mono">{esc(h['date'])} {esc(h['time'])}</td>
+                                <td>{esc(h['cause']) or '<span class="empty-cell">No details provided</span>'}</td>
                             </tr>'''
 
     html += f'''
@@ -1051,12 +1088,12 @@ def db_viewer():
         html += f'''
                             <tr>
                                 <td class="mono">#{i['id']}</td>
-                                <td><strong>{i['title']}</strong></td>
-                                <td>{i['location']}</td>
-                                <td>{i['inspector']}</td>
-                                <td class="mono">{i['date']}</td>
-                                <td class="mono">{i['time']}</td>
-                                <td><span class="badge badge-scheduled">{i['status']}</span></td>
+                                <td><strong>{esc(i['title'])}</strong></td>
+                                <td>{esc(i['location'])}</td>
+                                <td>{esc(i['inspector'])}</td>
+                                <td class="mono">{esc(i['date'])}</td>
+                                <td class="mono">{esc(i['time'])}</td>
+                                <td><span class="badge badge-scheduled">{esc(i['status'])}</span></td>
                             </tr>'''
 
     html += f'''
@@ -1091,12 +1128,12 @@ def db_viewer():
         html += f'''
                             <tr>
                                 <td class="mono">#{c['id']}</td>
-                                <td><strong>{c['name']}</strong></td>
-                                <td>{c['position']}</td>
-                                <td><span class="badge badge-staff">{c['department']}</span></td>
-                                <td class="mono">{c['phone']}</td>
-                                <td class="mono">{c['email'] or '<span class="empty-cell">N/A</span>'}</td>
-                                <td><span class="badge badge-resolved">{c['status']}</span></td>
+                                <td><strong>{esc(c['name'])}</strong></td>
+                                <td>{esc(c['position'])}</td>
+                                <td><span class="badge badge-staff">{esc(c['department'])}</span></td>
+                                <td class="mono">{esc(c['phone'])}</td>
+                                <td class="mono">{esc(c['email']) or '<span class="empty-cell">N/A</span>'}</td>
+                                <td><span class="badge badge-resolved">{esc(c['status'])}</span></td>
                             </tr>'''
 
     html += '''
@@ -1147,12 +1184,13 @@ def db_viewer():
 
 # ── Hazard Routes ────────────────────────────────────────
 @app.route('/api/hazards')
+@login_required
 def list_hazards():
     status = request.args.get('status')
     urgency = request.args.get('urgency')
     search = request.args.get('search')
-    page = int(request.args.get('page', 1))
-    limit = int(request.args.get('limit', 50))
+    page = safe_int(request.args.get('page'), default=1, min_val=1, max_val=10000)
+    limit = safe_int(request.args.get('limit'), default=50, min_val=1, max_val=200)
 
     sql = 'SELECT * FROM hazards WHERE 1=1'
     params = []
@@ -1204,6 +1242,7 @@ def list_hazards():
     return jsonify({"hazards": hazards, "total": total, "page": page, "limit": limit})
 
 @app.route('/api/hazards/<ticket>')
+@login_required
 def get_hazard(ticket):
     conn = get_db()
     row = conn.execute('SELECT * FROM hazards WHERE ticket = ?', (ticket,)).fetchone()
@@ -1230,6 +1269,7 @@ def get_hazard(ticket):
     })
 
 @app.route('/api/hazards', methods=['POST'])
+@login_required
 def create_hazard():
     data = request.json or {}
     now = datetime.now()
@@ -1284,6 +1324,7 @@ def create_hazard():
     return jsonify({"message": "Hazard report created.", "ticket": ticket}), 201
 
 @app.route('/api/hazards/<ticket>/resolve', methods=['PATCH'])
+@manager_required
 def resolve_hazard(ticket):
     resolved_date = datetime.now().strftime("%m-%d-%y")
     
@@ -1301,6 +1342,7 @@ def resolve_hazard(ticket):
     return jsonify({"message": "Hazard marked as resolved.", "ticket": ticket})
 
 @app.route('/api/hazards/export/csv')
+@manager_required
 def export_hazards():
     conn = get_db()
     rows = conn.execute("SELECT * FROM hazards WHERE status = 'Resolved' ORDER BY id DESC").fetchall()
@@ -1320,9 +1362,10 @@ def export_hazards():
 
 # ── Inspection Routes ────────────────────────────────────
 @app.route('/api/inspections')
+@login_required
 def list_inspections():
-    page = int(request.args.get('page', 1))
-    limit = int(request.args.get('limit', 50))
+    page = safe_int(request.args.get('page'), default=1, min_val=1, max_val=10000)
+    limit = safe_int(request.args.get('limit'), default=50, min_val=1, max_val=200)
     
     conn = get_db()
     total = conn.execute('SELECT COUNT(*) as c FROM inspections').fetchone()['c']
@@ -1334,6 +1377,7 @@ def list_inspections():
     return jsonify({"inspections": inspections, "total": total, "page": page, "limit": limit})
 
 @app.route('/api/inspections', methods=['POST'])
+@manager_required
 def create_inspection():
     data = request.json or {}
     if not data.get('title') or not data.get('location') or not data.get('inspector'):
@@ -1353,6 +1397,7 @@ def create_inspection():
     return jsonify({"message": "Inspection scheduled successfully.", "id": cursor.lastrowid}), 201
 
 @app.route('/api/inspections/<int:id>', methods=['DELETE'])
+@manager_required
 def delete_inspection(id):
     conn = get_db()
     with conn:
@@ -1365,12 +1410,14 @@ def delete_inspection(id):
 
 # ── Contact Directory Routes ─────────────────────────────
 @app.route('/api/contacts', methods=['GET'])
+@login_required
 def list_contacts():
     conn = get_db()
     rows = conn.execute('SELECT * FROM contacts ORDER BY id DESC').fetchall()
     return jsonify({"contacts": [dict(row) for row in rows]})
 
 @app.route('/api/contacts', methods=['POST'])
+@login_required
 def create_contact():
     data = request.json or {}
     name = (data.get('name') or '').strip()
@@ -1394,6 +1441,7 @@ def create_contact():
     return jsonify({"message": "Contact added successfully.", "id": new_id}), 201
 
 @app.route('/api/contacts/<id>', methods=['DELETE'])
+@login_required
 def delete_contact(id):
     clean_id = str(id).replace('contact-', '')
     conn = get_db()
@@ -1410,6 +1458,7 @@ def delete_contact(id):
 
 # ── Notification Routes ──────────────────────────────────
 @app.route('/api/notifications')
+@login_required
 def list_notifications():
     conn = get_db()
     rows = conn.execute('SELECT * FROM notifications ORDER BY id DESC LIMIT 20').fetchall()
@@ -1426,6 +1475,7 @@ def list_notifications():
     return jsonify({"notifications": notifications})
 
 @app.route('/api/notifications', methods=['POST'])
+@login_required
 def create_notification():
     title = (request.json or {}).get('title')
     if not title:
@@ -1438,6 +1488,7 @@ def create_notification():
     return jsonify({"message": "Notification created.", "id": cursor.lastrowid}), 201
 
 @app.route('/api/notifications/clear', methods=['POST'])
+@login_required
 def clear_notifications():
     conn = get_db()
     with conn:

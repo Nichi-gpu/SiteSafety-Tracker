@@ -83,114 +83,102 @@ document.addEventListener('DOMContentLoaded', () => {
   initUserSession();
 
   /* ============================================
-     2. UNIFIED DATA STORAGE & SEEDING
+     2. API-BACKED DATA LAYER
      ============================================ */
 
-  // Initial Seed for Hazards (Only genuine user-created reports)
-  function initHazardStore() {
-    const raw = localStorage.getItem('SiteSafety_Hazards');
-    let hazards = [];
-    if (raw) {
-      try {
-        hazards = JSON.parse(raw);
-        if (!Array.isArray(hazards)) hazards = [];
-      } catch (e) {
-        console.error('Error parsing SiteSafety_Hazards:', e);
-        hazards = [];
+  // ── Hazards (API-first, localStorage cache fallback) ──
+  let _hazardsCache = [];
+
+  async function fetchHazards(filters = {}) {
+    try {
+      if (typeof API !== 'undefined' && API.hazards) {
+        const res = await API.hazards.list(filters);
+        _hazardsCache = res.hazards || [];
+        localStorage.setItem('SiteSafety_Hazards', JSON.stringify(_hazardsCache));
+        return _hazardsCache;
       }
+    } catch (e) {
+      console.warn('API hazards unavailable, using cache:', e.message);
     }
-
-    // Purge mock/sample seed hazards so only genuine user-created reports remain
-    const mockReporters = ['Michael Vance', 'Elena Gomez', 'Dr. Robert Hayes', 'Dr. Hayes', 'Marcus Sterling', 'Sarah Lin', 'Jennifer Ward', 'David Kim', 'Angela Brooks'];
-    hazards = hazards.filter(h => {
-      if (!h || !h.ticket) return false;
-      const isMockTicket = /^ABC-2026-(0315|0316|0310|0305)-/i.test(h.ticket);
-      const isMockReporter = h.personnel && mockReporters.includes(h.personnel.name);
-      return !isMockTicket && !isMockReporter;
-    });
-
-    localStorage.setItem('SiteSafety_Hazards', JSON.stringify(hazards));
-    return hazards;
+    // Fallback to localStorage cache
+    try {
+      _hazardsCache = JSON.parse(localStorage.getItem('SiteSafety_Hazards') || '[]');
+    } catch (_) { _hazardsCache = []; }
+    return _hazardsCache;
   }
 
   function getStoredHazards() {
-    return initHazardStore();
+    // Synchronous accessor — returns last fetched cache
+    try {
+      return JSON.parse(localStorage.getItem('SiteSafety_Hazards') || '[]');
+    } catch (_) { return []; }
   }
 
   function saveStoredHazards(hazards) {
     localStorage.setItem('SiteSafety_Hazards', JSON.stringify(hazards));
+    _hazardsCache = hazards;
   }
 
-  // Initial Seed for Scheduled Inspections (Clean - genuine user submissions only)
-  function initInspectionStore() {
-    const raw = localStorage.getItem('SiteSafety_Inspections');
-    let inspections = [];
-    if (raw) {
-      try {
-        inspections = JSON.parse(raw);
-        if (!Array.isArray(inspections)) inspections = [];
-      } catch (e) {
-        console.error('Error parsing SiteSafety_Inspections:', e);
-        inspections = [];
+  // ── Inspections (API-first, localStorage cache fallback) ──
+  let _inspectionsCache = [];
+
+  async function fetchInspections() {
+    try {
+      if (typeof API !== 'undefined' && API.inspections) {
+        const res = await API.inspections.list();
+        _inspectionsCache = res.inspections || [];
+        localStorage.setItem('SiteSafety_Inspections', JSON.stringify(_inspectionsCache));
+        return _inspectionsCache;
       }
+    } catch (e) {
+      console.warn('API inspections unavailable, using cache:', e.message);
     }
-
-    const mockTitles = [
-      'Tower Crane Integrity Check', 'Scaffolding Safety Audit', 'Electrical Rig Wiring Review',
-      'Excavation Shoring Inspection', 'PPE Compliance Patrol', 'Chemical Storage Assessment',
-      'Fire Suppression Pipeline Test', 'Fall Arrest Anchor Audit', 'Concrete Pour Formwork Check',
-      'Heavy Plant Machinery Inspection', 'First Aid Station Supply Audit', 'Perimeter Barrier Stability Review',
-      'Emergency Egress Pathway Check', 'Ventilation & Air Quality Review', 'Hydraulic Lift Systems Testing',
-      'Ground Resistance & Earthing Check', 'Confined Space Entry Signoff', 'Hazardous Waste Manifest Audit'
-    ];
-
-    inspections = inspections.filter(item => item && item.title && !mockTitles.includes(item.title));
-    localStorage.setItem('SiteSafety_Inspections', JSON.stringify(inspections));
-    return inspections;
+    try {
+      _inspectionsCache = JSON.parse(localStorage.getItem('SiteSafety_Inspections') || '[]');
+    } catch (_) { _inspectionsCache = []; }
+    return _inspectionsCache;
   }
 
   function getStoredInspections() {
-    return initInspectionStore();
+    try {
+      return JSON.parse(localStorage.getItem('SiteSafety_Inspections') || '[]');
+    } catch (_) { return []; }
   }
 
   function saveStoredInspections(inspections) {
     localStorage.setItem('SiteSafety_Inspections', JSON.stringify(inspections));
+    _inspectionsCache = inspections;
   }
 
-  // Initial Seed for System Notifications
-  function initNotificationStore() {
-    const raw = localStorage.getItem('SiteSafety_Notifications');
-    let notifs = [];
-    if (raw) {
-      try {
-        notifs = JSON.parse(raw);
-        if (!Array.isArray(notifs)) notifs = [];
-      } catch (e) {
-        console.error('Error parsing SiteSafety_Notifications:', e);
-        notifs = [];
+  // ── Notifications (API-first, localStorage cache fallback) ──
+  let _notifsCache = [];
+
+  async function fetchNotifications() {
+    try {
+      if (typeof API !== 'undefined' && API.notifications) {
+        const res = await API.notifications.list();
+        _notifsCache = res.notifications || [];
+        localStorage.setItem('SiteSafety_Notifications', JSON.stringify(_notifsCache));
+        return _notifsCache;
       }
+    } catch (e) {
+      console.warn('API notifications unavailable, using cache:', e.message);
     }
-
-    // Purge mock seed notifications (IDs 1, 2, 3 or placeholder protocol/scaffolding texts)
-    notifs = notifs.filter(n => {
-      if (!n || !n.title) return false;
-      if (n.id === '1' || n.id === '2' || n.id === '3') return false;
-      if (n.title.includes('New Safety Protocol Published for Q3')) return false;
-      if (n.title.includes('Scaffolding Audit Inspection Completed')) return false;
-      if (n.title.includes('ABC-2026-0310-01 Marked as Resolved')) return false;
-      return true;
-    });
-
-    localStorage.setItem('SiteSafety_Notifications', JSON.stringify(notifs));
-    return notifs;
+    try {
+      _notifsCache = JSON.parse(localStorage.getItem('SiteSafety_Notifications') || '[]');
+    } catch (_) { _notifsCache = []; }
+    return _notifsCache;
   }
 
   function getStoredNotifications() {
-    return initNotificationStore();
+    try {
+      return JSON.parse(localStorage.getItem('SiteSafety_Notifications') || '[]');
+    } catch (_) { return []; }
   }
 
   function saveStoredNotifications(notifs) {
     localStorage.setItem('SiteSafety_Notifications', JSON.stringify(notifs));
+    _notifsCache = notifs;
     updateNotifBadge();
   }
 
@@ -202,8 +190,11 @@ document.addEventListener('DOMContentLoaded', () => {
       badge.style.display = hasUnread ? 'block' : 'none';
     });
   }
-  // Initialize notification badge state on page load
-  updateNotifBadge();
+
+  // Fetch live data from API on page load
+  fetchHazards();
+  fetchInspections();
+  fetchNotifications().then(() => updateNotifBadge());
 
   function addNotification(title, meta = {}) {
     const notifs = getStoredNotifications();
@@ -271,6 +262,37 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     if (sidebarRoleLabel) sidebarRoleLabel.textContent = 'Reporting Personnel';
     if (navDashboardSubtitle) navDashboardSubtitle.textContent = "REPORTING PERSONNEL'S DASHBOARD";
+  }
+
+  // Server-side session verification & route guarding
+  if (typeof API !== 'undefined' && API.auth) {
+    API.auth.me().then(res => {
+      const user = res.user;
+      if (user) {
+        // Sync verified role from server
+        localStorage.setItem('userRole', user.role);
+        localStorage.setItem('selectedRole', user.role);
+        localStorage.setItem('userEmail', user.email);
+        localStorage.setItem('username', user.username);
+        if (displayAccountName) {
+          const name = user.username || user.email.split('@')[0];
+          displayAccountName.textContent = name.charAt(0).toUpperCase() + name.slice(1);
+        }
+        // If staff tries to access an administrator page, redirect them to staff home
+        const isManagerPage = window.location.pathname.includes('manager-');
+        if (isManagerPage && user.role !== 'manager') {
+          console.warn('Unauthorized access to manager route blocked. Redirecting to home.html');
+          window.location.href = 'home.html';
+        }
+      }
+    }).catch(err => {
+      const currentPage = (window.location.pathname.split('/').pop() || '').toLowerCase();
+      const publicPages = ['login.html', 'signup.html', 'index.html', ''];
+      if (!publicPages.includes(currentPage) && (err.message.includes('401') || err.message.includes('Not authenticated') || err.message.includes('Authentication required'))) {
+        console.warn('Session expired or unauthenticated. Redirecting to login.html');
+        window.location.href = 'login.html';
+      }
+    });
   }
 
   /* ============================================

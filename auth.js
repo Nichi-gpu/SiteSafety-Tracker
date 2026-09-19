@@ -97,9 +97,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await API.auth.login(identifier, password);
         const user = res.user || {};
 
-        // Determine effective role: prioritize the role chosen on landing page ('selectedRole')
+        // Determine effective role: prioritize the verified role returned by the server
         const chosenRole = localStorage.getItem('selectedRole');
-        const effectiveRole = chosenRole || user.role || 'staff';
+        const effectiveRole = user.role || chosenRole || 'staff';
 
         // Persist session info in localStorage
         localStorage.setItem('isLoggedIn', 'true');

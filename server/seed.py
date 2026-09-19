@@ -9,17 +9,17 @@ def seed():
     
     # ── 1. Default Users ────────────────────────────────────
     users = [
-        ('manager', 'manager@sitesafety.com', bcrypt.hashpw('password123'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8'), 'manager', 'SiteSafety Corp'),
-        ('andrei', 'andrei@sitesafety.com', bcrypt.hashpw('password123'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8'), 'staff', 'SiteSafety Corp'),
-        ('admin', 'admin@sitesafety.com', bcrypt.hashpw('admin123'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8'), 'manager', 'SiteSafety Global')
+        ('manager', 'manager@sitesafety.com', bcrypt.hashpw('Manager1!'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8'), 'manager', 'SiteSafety Corp'),
+        ('andrei', 'andrei@sitesafety.com', bcrypt.hashpw('Staff123!'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8'), 'staff', 'SiteSafety Corp'),
+        ('admin', 'admin@sitesafety.com', bcrypt.hashpw('Admin123!'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8'), 'manager', 'SiteSafety Global')
     ]
     with conn:
         for u in users:
             existing = conn.execute('SELECT id FROM users WHERE email = ?', (u[1],)).fetchone()
             if existing:
                 conn.execute('''
-                    UPDATE users SET username = ?, role = ?, company = ? WHERE email = ?
-                ''', (u[0], u[3], u[4], u[1]))
+                    UPDATE users SET username = ?, password = ?, role = ?, company = ? WHERE email = ?
+                ''', (u[0], u[2], u[3], u[4], u[1]))
             else:
                 conn.execute('''
                     INSERT INTO users (username, email, password, role, company, signup_time)
