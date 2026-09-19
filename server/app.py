@@ -506,112 +506,95 @@ def db_viewer():
     <style>
         :root {{
             --bg-deep: #081733;
-            --bg-card: #0c2448;
-            --bg-card-alt: #0e2a56;
-            --bg-surface: #0b1c3d;
-            --border: rgba(140, 189, 246, 0.18);
-            --border-glow: rgba(56, 189, 248, 0.35);
-            --text-main: #f0f6fc;
-            --text-muted: #94a3b8;
-            --text-dim: #64748b;
-            --primary: #38bdf8;
-            --primary-dark: #0284c7;
-            --gold: #f59e0b;
-            --emerald: #10b981;
-            --rose: #f43f5e;
-            --purple: #a855f7;
-            --teal: #14b8a6;
+            --bg-card: #0c2045;
+            --bg-card-alt: #0a1b38;
+            --bg-navbar: #0b459b;
+            --primary-blue: #0b459b;
+            --primary-hover: #0d54bc;
+            --border-color: rgba(163, 199, 247, 0.22);
+            --border-focus: #a3c7f7;
+            --border-light: #bdd6f5;
+            --text-main: #ffffff;
+            --text-body: #e2e8f0;
+            --text-muted: #8cbdf6;
+            --text-dim: #94a3b8;
         }}
         * {{ box-sizing: border-box; margin: 0; padding: 0; }}
         body {{
             font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg-deep);
-            color: var(--text-main);
+            color: var(--text-body);
             min-height: 100vh;
             padding: 24px 20px 60px;
             line-height: 1.5;
-            background-image: radial-gradient(circle at 15% 15%, rgba(14, 38, 86, 0.7) 0%, transparent 60%),
-                              radial-gradient(circle at 85% 85%, rgba(11, 28, 61, 0.7) 0%, transparent 60%);
+            background-image: radial-gradient(circle at 15% 15%, rgba(12, 32, 69, 0.8) 0%, transparent 60%),
+                              radial-gradient(circle at 85% 85%, rgba(11, 69, 155, 0.25) 0%, transparent 60%);
         }}
         .container {{ max-width: 1320px; margin: 0 auto; }}
 
-        /* Top Bar Header matching website */
+        /* Top Bar matching home page header */
         header.db-header {{
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 18px;
+            gap: 16px;
             padding: 16px 24px;
-            background: linear-gradient(135deg, #0b1f44 0%, #0c2652 100%);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.45);
+            background: var(--bg-navbar);
+            border: 1px solid var(--border-focus);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px -4px rgba(8, 23, 51, 0.5);
             margin-bottom: 24px;
         }}
-        .header-brand {{ display: flex; align-items: center; gap: 16px; }}
-        .header-icon-circle {{
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #1d4ed8, #0284c7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
-        }}
-        .header-icon-circle svg {{ width: 26px; height: 26px; stroke: #fff; fill: none; }}
-        .header-titles {{ display: flex; flex-direction: column; }}
-        .header-title-main {{ font-size: 17px; font-weight: 700; letter-spacing: 0.6px; color: #ffffff; text-transform: uppercase; }}
-        .header-title-sub {{ font-size: 12px; font-weight: 600; color: #8cbdf6; letter-spacing: 1px; text-transform: uppercase; }}
-        .header-title-desc {{ font-size: 11px; font-weight: 500; color: var(--gold); letter-spacing: 0.8px; margin-top: 1px; }}
+        .header-brand {{ display: flex; flex-direction: column; }}
+        .header-title-main {{ font-size: 17px; font-weight: 700; letter-spacing: 0.5px; color: #ffffff; text-transform: uppercase; }}
+        .header-title-sub {{ font-size: 12px; font-weight: 600; color: #bdd6f5; letter-spacing: 0.8px; text-transform: uppercase; margin-top: 1px; }}
+        .header-title-desc {{ font-size: 11px; font-weight: 500; color: #e2e8f0; margin-top: 2px; }}
 
         .header-actions {{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }}
         .db-status-pill {{
             display: inline-flex;
             align-items: center;
-            gap: 7px;
-            padding: 6px 14px;
-            background: rgba(16, 185, 129, 0.14);
-            border: 1px solid rgba(16, 185, 129, 0.35);
-            border-radius: 20px;
+            gap: 8px;
+            padding: 7px 14px;
+            background: rgba(8, 23, 51, 0.45);
+            border: 1px solid rgba(163, 199, 247, 0.35);
+            border-radius: 8px;
             font-size: 12px;
             font-weight: 600;
-            color: #34d399;
+            color: #ffffff;
         }}
         .pulse-dot {{
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: #10b981;
-            box-shadow: 0 0 8px #10b981;
+            background: #34d399;
+            box-shadow: 0 0 6px #34d399;
             animation: pulseAnim 2s infinite ease-in-out;
         }}
         @keyframes pulseAnim {{
             0%, 100% {{ transform: scale(1); opacity: 1; }}
-            50% {{ transform: scale(1.3); opacity: 0.6; }}
+            50% {{ transform: scale(1.25); opacity: 0.6; }}
         }}
         .btn-top {{
             display: inline-flex;
             align-items: center;
-            gap: 7px;
             text-decoration: none;
             padding: 8px 16px;
-            border-radius: 10px;
+            border-radius: 8px;
             font-size: 12px;
             font-weight: 600;
             transition: all 0.2s ease;
             cursor: pointer;
-            border: 1px solid transparent;
+            border: 1px solid rgba(163, 199, 247, 0.35);
+            background: rgba(8, 23, 51, 0.45);
+            color: #ffffff;
         }}
-        .btn-portal {{ background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); }}
-        .btn-portal:hover {{ background: rgba(56, 189, 248, 0.22); color: #fff; transform: translateY(-1px); }}
-        .btn-refresh {{ background: #1d4ed8; color: #fff; }}
-        .btn-refresh:hover {{ background: #2563eb; transform: translateY(-1px); }}
-        .btn-export {{ background: #059669; color: #fff; }}
-        .btn-export:hover {{ background: #10b981; transform: translateY(-1px); }}
+        .btn-top:hover {{ background: rgba(8, 23, 51, 0.75); border-color: #ffffff; transform: translateY(-1px); }}
+        .btn-action-primary {{ background: #0c2045; border-color: #bdd6f5; }}
+        .btn-action-primary:hover {{ background: #081733; }}
 
-        /* KPI Metric Cards */
+        /* Metric Cards Row */
         .kpi-grid {{
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -619,70 +602,83 @@ def db_viewer():
             margin-bottom: 24px;
         }}
         .kpi-card {{
-            background: linear-gradient(135deg, #0c2246 0%, #0a1b38 100%);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 16px 18px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 18px 20px;
             position: relative;
-            overflow: hidden;
-            box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.35);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+            border-top: 3px solid var(--border-focus);
             transition: transform 0.2s, border-color 0.2s;
         }}
-        .kpi-card:hover {{ transform: translateY(-2px); border-color: var(--border-glow); }}
-        .kpi-card::before {{
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 3px;
+        .kpi-card:hover {{ transform: translateY(-2px); border-color: var(--border-focus); }}
+        .kpi-label {{
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 6px;
         }}
-        .kpi-users::before {{ background: linear-gradient(90deg, #38bdf8, #2563eb); }}
-        .kpi-pending::before {{ background: linear-gradient(90deg, #f59e0b, #fbbf24); }}
-        .kpi-resolved::before {{ background: linear-gradient(90deg, #10b981, #34d399); }}
-        .kpi-inspections::before {{ background: linear-gradient(90deg, #818cf8, #a855f7); }}
-        .kpi-audit::before {{ background: linear-gradient(90deg, #ec4899, #f43f5e); }}
-        .kpi-contacts::before {{ background: linear-gradient(90deg, #14b8a6, #06b6d4); }}
+        .kpi-value {{
+            font-size: 26px;
+            font-weight: 700;
+            color: #ffffff;
+            font-family: 'JetBrains Mono', monospace;
+        }}
+        .kpi-sub {{
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }}
 
-        .kpi-label {{ font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; display: flex; justify-content: space-between; }}
-        .kpi-value {{ font-size: 26px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; }}
-        .kpi-sub {{ font-size: 11px; color: var(--text-dim); margin-top: 4px; }}
-
-        /* Live Table Search Bar */
+        /* Live Table Search Filter */
         .search-container {{
-            background: linear-gradient(135deg, #0b1f44 0%, #0c2652 100%);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 14px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px 18px;
             margin-bottom: 20px;
             display: flex;
             align-items: center;
-            gap: 14px;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+            gap: 12px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
         }}
-        .search-icon {{ stroke: #8cbdf6; width: 20px; height: 20px; flex-shrink: 0; }}
         .search-input {{
             flex: 1;
             background: transparent;
             border: none;
             outline: none;
-            color: #fff;
-            font-size: 14px;
+            color: #ffffff;
+            font-size: 13px;
             font-family: inherit;
         }}
-        .search-input::placeholder {{ color: #64748b; }}
-        .search-tip {{ font-size: 11px; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; }}
+        .search-input::placeholder {{ color: var(--text-dim); }}
+        .search-badge {{
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            background: rgba(8, 23, 51, 0.5);
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }}
 
         /* Tab Navigation */
         .tabs-nav {{
             display: flex;
-            gap: 10px;
+            gap: 8px;
             margin-bottom: 20px;
             flex-wrap: wrap;
         }}
         .tab-btn {{
-            background: #0b1d3d;
-            color: #94a3b8;
-            border: 1px solid var(--border);
-            padding: 10px 20px;
-            border-radius: 10px;
+            background: var(--bg-card);
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            padding: 9px 18px;
+            border-radius: 8px;
             font-family: inherit;
             font-size: 13px;
             font-weight: 600;
@@ -692,63 +688,64 @@ def db_viewer():
             align-items: center;
             gap: 8px;
         }}
-        .tab-btn:hover {{ background: #0f2752; color: #fff; border-color: rgba(140, 189, 246, 0.4); }}
+        .tab-btn:hover {{ background: #0f2752; color: #ffffff; border-color: var(--border-focus); }}
         .tab-btn.active {{
-            background: linear-gradient(135deg, #1d4ed8 0%, #0284c7 100%);
+            background: var(--bg-navbar);
             color: #ffffff;
-            border-color: #38bdf8;
-            box-shadow: 0 4px 16px rgba(2, 132, 199, 0.35);
+            border-color: var(--border-focus);
+            box-shadow: 0 4px 12px rgba(11, 69, 155, 0.4);
         }}
         .tab-count {{
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(8, 23, 51, 0.5);
             font-size: 11px;
             padding: 2px 7px;
-            border-radius: 12px;
+            border-radius: 10px;
             font-family: 'JetBrains Mono', monospace;
+            color: #ffffff;
         }}
 
         /* Table Card Container */
         .card-table {{
-            background: linear-gradient(135deg, #0c2448 0%, #0a1b38 100%);
-            border: 1px solid var(--border);
-            border-radius: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.35);
             margin-bottom: 30px;
         }}
         .card-table-header {{
-            padding: 16px 24px;
-            background: #07152b;
-            border-bottom: 1px solid var(--border);
+            padding: 14px 20px;
+            background: #081733;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 12px;
         }}
-        .table-title {{ font-size: 15px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 10px; }}
+        .table-title {{ font-size: 14px; font-weight: 600; color: #ffffff; letter-spacing: 0.3px; }}
         .table-wrap {{ overflow-x: auto; }}
         table {{ width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }}
         th {{
-            background: #061124;
-            padding: 13px 18px;
-            color: #8cbdf6;
-            font-weight: 700;
+            background: var(--bg-navbar);
+            padding: 12px 16px;
+            color: #ffffff;
+            font-weight: 600;
             text-transform: uppercase;
             font-size: 11px;
             letter-spacing: 0.6px;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--border-focus);
             white-space: nowrap;
         }}
         td {{
-            padding: 12px 18px;
-            border-bottom: 1px solid rgba(140, 189, 246, 0.1);
-            color: #e2e8f0;
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(163, 199, 247, 0.1);
+            color: var(--text-body);
         }}
-        tr:nth-child(even) td {{ background: rgba(14, 38, 86, 0.35); }}
-        tr:hover td {{ background: rgba(56, 189, 248, 0.08); }}
+        tr:nth-child(even) td {{ background: rgba(8, 23, 51, 0.4); }}
+        tr:hover td {{ background: rgba(11, 69, 155, 0.2); }}
 
-        /* Badges & Pills */
+        /* Badges & Tags */
         .mono {{ font-family: 'JetBrains Mono', monospace; font-size: 12px; }}
         .badge {{
             display: inline-block;
@@ -760,131 +757,118 @@ def db_viewer():
             letter-spacing: 0.4px;
             white-space: nowrap;
         }}
-        .badge-manager {{ background: rgba(245, 158, 11, 0.16); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }}
-        .badge-staff {{ background: rgba(56, 189, 248, 0.16); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); }}
-        .badge-pending {{ background: rgba(245, 158, 11, 0.16); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }}
-        .badge-resolved {{ background: rgba(16, 185, 129, 0.16); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }}
-        .badge-scheduled {{ background: rgba(56, 189, 248, 0.16); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); }}
+        .badge-manager {{ background: rgba(245, 216, 53, 0.15); color: #fde047; border: 1px solid rgba(245, 216, 53, 0.35); }}
+        .badge-staff {{ background: rgba(140, 189, 246, 0.15); color: #8cbdf6; border: 1px solid rgba(140, 189, 246, 0.35); }}
+        .badge-pending {{ background: rgba(245, 216, 53, 0.15); color: #fde047; border: 1px solid rgba(245, 216, 53, 0.35); }}
+        .badge-resolved {{ background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.35); }}
+        .badge-scheduled {{ background: rgba(140, 189, 246, 0.15); color: #8cbdf6; border: 1px solid rgba(140, 189, 246, 0.35); }}
 
-        .urgency-high {{ color: #f43f5e; font-weight: 600; }}
-        .urgency-medium {{ color: #fbbf24; font-weight: 600; }}
+        .urgency-high {{ color: #f87171; font-weight: 600; }}
+        .urgency-medium {{ color: #fde047; font-weight: 600; }}
         .urgency-low {{ color: #34d399; font-weight: 600; }}
 
-        /* Action Badges in Audit Trail */
+        /* Action Badges */
         .action-tag {{
             display: inline-block;
-            padding: 3px 9px;
-            border-radius: 6px;
+            padding: 2px 8px;
+            border-radius: 5px;
             font-size: 11px;
             font-weight: 600;
             font-family: 'JetBrains Mono', monospace;
             letter-spacing: 0.3px;
         }}
-        .action-report {{ background: rgba(245, 158, 11, 0.18); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }}
-        .action-resolve {{ background: rgba(16, 185, 129, 0.18); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }}
-        .action-inspection {{ background: rgba(168, 85, 247, 0.18); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.35); }}
-        .action-cancel {{ background: rgba(244, 63, 94, 0.18); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.35); }}
-        .action-contact {{ background: rgba(20, 184, 166, 0.18); color: #2dd4bf; border: 1px solid rgba(20, 184, 166, 0.35); }}
-        .action-login {{ background: rgba(56, 189, 248, 0.18); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); }}
-        .action-logout {{ background: rgba(148, 163, 184, 0.18); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.35); }}
-        .action-signup {{ background: rgba(99, 102, 241, 0.18); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.35); }}
-        .action-default {{ background: rgba(148, 163, 184, 0.15); color: #cbd5e1; }}
+        .action-report {{ background: rgba(245, 216, 53, 0.15); color: #fde047; border: 1px solid rgba(245, 216, 53, 0.3); }}
+        .action-resolve {{ background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }}
+        .action-inspection {{ background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }}
+        .action-cancel {{ background: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }}
+        .action-contact {{ background: rgba(20, 184, 166, 0.15); color: #2dd4bf; border: 1px solid rgba(20, 184, 166, 0.3); }}
+        .action-login {{ background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }}
+        .action-logout {{ background: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }}
+        .action-signup {{ background: rgba(129, 140, 248, 0.15); color: #a5b4fc; border: 1px solid rgba(129, 140, 248, 0.3); }}
+        .action-default {{ background: rgba(148, 163, 184, 0.12); color: #cbd5e1; }}
 
         .tab-panel {{ display: none; }}
         .tab-panel.active {{ display: block; }}
-        .empty-cell {{ color: #64748b; font-style: italic; }}
+        .empty-cell {{ color: var(--text-dim); font-style: italic; }}
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Brand Header matching website -->
+        <!-- Top Bar matching website header -->
         <header class="db-header">
             <div class="header-brand">
-                <div class="header-icon-circle">
-                    <svg viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-                        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-                    </svg>
-                </div>
-                <div class="header-titles">
-                    <div class="header-title-main">INCIDENT AND INSPECTION MANAGEMENT SYSTEM</div>
-                    <div class="header-title-sub">CENTRAL SQLITE DATABASE HUB</div>
-                    <div class="header-title-desc">STRICT AUDIT TRAIL • DARK THEME EDITION</div>
-                </div>
+                <div class="header-title-main">SiteSafety Tracker</div>
+                <div class="header-title-sub">Database Hub</div>
+                <div class="header-title-desc">Central SQLite System Records</div>
             </div>
             <div class="header-actions">
                 <div class="db-status-pill">
                     <span class="pulse-dot"></span>
-                    <span>Database Live: sitesafety.db</span>
+                    <span>Database: sitesafety.db</span>
                 </div>
-                <a href="/manager-home.html" class="btn-top btn-portal">← Manager Portal</a>
-                <a href="/home.html" class="btn-top btn-portal">Staff Portal</a>
-                <button type="button" onclick="location.reload()" class="btn-top btn-refresh">🔄 Refresh</button>
-                <a href="/api/hazards/export/csv" class="btn-top btn-export">⬇️ Export CSV</a>
+                <a href="/manager-home.html" class="btn-top">Manager Portal</a>
+                <a href="/home.html" class="btn-top">Staff Portal</a>
+                <button type="button" onclick="location.reload()" class="btn-top btn-action-primary">Refresh</button>
+                <a href="/api/hazards/export/csv" class="btn-top btn-action-primary">Export CSV</a>
             </div>
         </header>
 
-        <!-- KPI Metric Cards Row -->
+        <!-- Metric Cards Row (Clean, words only) -->
         <section class="kpi-grid">
-            <div class="kpi-card kpi-users">
-                <div class="kpi-label"><span>Total Users</span><span>👥</span></div>
+            <div class="kpi-card">
+                <div class="kpi-label">Users</div>
                 <div class="kpi-value">{total_users}</div>
-                <div class="kpi-sub">{manager_count} Admins • {staff_count} Staff</div>
+                <div class="kpi-sub">{manager_count} Managers • {staff_count} Staff</div>
             </div>
-            <div class="kpi-card kpi-pending">
-                <div class="kpi-label"><span>Pending Hazards</span><span>⚠️</span></div>
+            <div class="kpi-card">
+                <div class="kpi-label">Pending Hazards</div>
                 <div class="kpi-value">{pending_hazards}</div>
-                <div class="kpi-sub">Active open safety issues</div>
+                <div class="kpi-sub">Active open reports</div>
             </div>
-            <div class="kpi-card kpi-resolved">
-                <div class="kpi-label"><span>Resolved Hazards</span><span>✅</span></div>
+            <div class="kpi-card">
+                <div class="kpi-label">Resolved Hazards</div>
                 <div class="kpi-value">{resolved_hazards}</div>
-                <div class="kpi-sub">Archived resolution logs</div>
+                <div class="kpi-sub">Archived resolutions</div>
             </div>
-            <div class="kpi-card kpi-inspections">
-                <div class="kpi-label"><span>Scheduled Inspections</span><span>📋</span></div>
+            <div class="kpi-card">
+                <div class="kpi-label">Scheduled Inspections</div>
                 <div class="kpi-value">{total_inspections}</div>
-                <div class="kpi-sub">Zone checks & timetable</div>
+                <div class="kpi-sub">Timetable checks</div>
             </div>
-            <div class="kpi-card kpi-audit">
-                <div class="kpi-label"><span>Audit Trail Records</span><span>📜</span></div>
+            <div class="kpi-card">
+                <div class="kpi-label">Audit Records</div>
                 <div class="kpi-value">{total_logs}</div>
-                <div class="kpi-sub">Strictly logged activities</div>
+                <div class="kpi-sub">Logged activities</div>
             </div>
-            <div class="kpi-card kpi-contacts">
-                <div class="kpi-label"><span>Directory Contacts</span><span>📇</span></div>
+            <div class="kpi-card">
+                <div class="kpi-label">Directory Contacts</div>
                 <div class="kpi-value">{total_contacts}</div>
-                <div class="kpi-sub">Safety & Emergency team</div>
+                <div class="kpi-sub">Personnel listed</div>
             </div>
         </section>
 
         <!-- Live Instant Search Bar -->
         <div class="search-container">
-            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input type="text" id="db-search-input" class="search-input" placeholder="Type to filter active table records in real-time (e.g. ticket number, username, location, action)...">
-            <span class="search-tip">INSTANT FILTER</span>
+            <input type="text" id="db-search-input" class="search-input" placeholder="Search records across active table (e.g. ticket, username, location, action)...">
+            <span class="search-badge">Instant Filter</span>
         </div>
 
         <!-- Tab Navigation Bar -->
         <nav class="tabs-nav">
             <button class="tab-btn active" onclick="switchTab('tab-users', this)">
-                👥 Users &amp; Accounts <span class="tab-count">{total_users}</span>
+                Users <span class="tab-count">{total_users}</span>
             </button>
             <button class="tab-btn" onclick="switchTab('tab-logs', this)">
-                📜 Activity &amp; Audit Trail <span class="tab-count">{total_logs}</span>
+                Audit Trail <span class="tab-count">{total_logs}</span>
             </button>
             <button class="tab-btn" onclick="switchTab('tab-hazards', this)">
-                ⚠️ Hazard Reports <span class="tab-count">{len(hazards)}</span>
+                Hazard Reports <span class="tab-count">{len(hazards)}</span>
             </button>
             <button class="tab-btn" onclick="switchTab('tab-inspections', this)">
-                📋 Scheduled Inspections <span class="tab-count">{total_inspections}</span>
+                Inspections <span class="tab-count">{total_inspections}</span>
             </button>
             <button class="tab-btn" onclick="switchTab('tab-contacts', this)">
-                📇 Directory Contacts <span class="tab-count">{total_contacts}</span>
+                Contacts <span class="tab-count">{total_contacts}</span>
             </button>
         </nav>
 
@@ -892,7 +876,7 @@ def db_viewer():
         <div id="tab-users" class="tab-panel active">
             <div class="card-table">
                 <div class="card-table-header">
-                    <div class="table-title">👥 Registered User Accounts ({total_users})</div>
+                    <div class="table-title">User Accounts ({total_users})</div>
                 </div>
                 <div class="table-wrap">
                     <table>
@@ -932,20 +916,20 @@ def db_viewer():
             </div>
         </div>
 
-        <!-- TAB 2: AUDIT TRAIL (ALL STRICTLY RECORDED ACTIVITIES) -->
+        <!-- TAB 2: AUDIT TRAIL -->
         <div id="tab-logs" class="tab-panel">
             <div class="card-table">
                 <div class="card-table-header">
-                    <div class="table-title">📜 Strict Activity &amp; Audit Trail (Last {len(logs)} Events of {total_logs})</div>
+                    <div class="table-title">Activity and Audit Trail (Showing {len(logs)} of {total_logs} records)</div>
                 </div>
                 <div class="table-wrap">
                     <table>
                         <thead>
                             <tr>
                                 <th>Log ID</th>
-                                <th>Action Performed</th>
+                                <th>Action</th>
                                 <th>Status</th>
-                                <th>Username / Account</th>
+                                <th>Account</th>
                                 <th>Role</th>
                                 <th>Timestamp</th>
                                 <th>IP Address</th>
@@ -975,14 +959,14 @@ def db_viewer():
         else:
             act_cls = 'action-default'
             
-        status_color = '#34d399' if l['status'] == 'SUCCESS' else '#f43f5e'
+        status_color = '#34d399' if l['status'] == 'SUCCESS' else '#f87171'
         role_label = l['role'] or 'system'
         
         html += f'''
                             <tr>
                                 <td class="mono">#{l['id']}</td>
                                 <td><span class="action-tag {act_cls}">{l['action']}</span></td>
-                                <td style="color:{status_color}; font-weight:700; font-size:11px;">{l['status']}</td>
+                                <td style="color:{status_color}; font-weight:600; font-size:11px;">{l['status']}</td>
                                 <td><strong>{l['username'] or l['email'] or 'System'}</strong></td>
                                 <td><span class="badge {'badge-manager' if role_label=='manager' else 'badge-staff'}">{role_label}</span></td>
                                 <td class="mono">{l['timestamp']}</td>
@@ -1001,7 +985,7 @@ def db_viewer():
         <div id="tab-hazards" class="tab-panel">
             <div class="card-table">
                 <div class="card-table-header">
-                    <div class="table-title">⚠️ Safety Hazard Records ({len(hazards)})</div>
+                    <div class="table-title">Hazard Reports ({len(hazards)})</div>
                 </div>
                 <div class="table-wrap">
                     <table>
@@ -1012,7 +996,7 @@ def db_viewer():
                                 <th>Category</th>
                                 <th>Urgency</th>
                                 <th>Status</th>
-                                <th>Reporter / Officer</th>
+                                <th>Reporter</th>
                                 <th>Date &amp; Time</th>
                                 <th>Cause / Description</th>
                             </tr>
@@ -1046,17 +1030,17 @@ def db_viewer():
         <div id="tab-inspections" class="tab-panel">
             <div class="card-table">
                 <div class="card-table-header">
-                    <div class="table-title">📋 Scheduled Site Inspections Timetable ({total_inspections})</div>
+                    <div class="table-title">Scheduled Inspections ({total_inspections})</div>
                 </div>
                 <div class="table-wrap">
                     <table>
                         <thead>
                             <tr>
                                 <th>Inspection ID</th>
-                                <th>Title / Inspection Name</th>
-                                <th>Location / Zone</th>
-                                <th>Lead Inspector</th>
-                                <th>Scheduled Date</th>
+                                <th>Inspection Name</th>
+                                <th>Location</th>
+                                <th>Inspector</th>
+                                <th>Date</th>
                                 <th>Time</th>
                                 <th>Status</th>
                             </tr>
@@ -1086,17 +1070,17 @@ def db_viewer():
         <div id="tab-contacts" class="tab-panel">
             <div class="card-table">
                 <div class="card-table-header">
-                    <div class="table-title">📇 Emergency &amp; Safety Contact Directory ({total_contacts})</div>
+                    <div class="table-title">Contact Directory ({total_contacts})</div>
                 </div>
                 <div class="table-wrap">
                     <table>
                         <thead>
                             <tr>
                                 <th>Contact ID</th>
-                                <th>Full Name</th>
-                                <th>Position / Role</th>
+                                <th>Name</th>
+                                <th>Position</th>
                                 <th>Department</th>
-                                <th>Phone Number</th>
+                                <th>Phone</th>
                                 <th>Email</th>
                                 <th>Status</th>
                             </tr>

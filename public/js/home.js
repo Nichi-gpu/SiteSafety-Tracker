@@ -121,43 +121,32 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('SiteSafety_Hazards', JSON.stringify(hazards));
   }
 
-  // Initial Seed for Scheduled Inspections
+  // Initial Seed for Scheduled Inspections (Clean - genuine user submissions only)
   function initInspectionStore() {
     const raw = localStorage.getItem('SiteSafety_Inspections');
+    let inspections = [];
     if (raw) {
       try {
-        return JSON.parse(raw);
+        inspections = JSON.parse(raw);
+        if (!Array.isArray(inspections)) inspections = [];
       } catch (e) {
         console.error('Error parsing SiteSafety_Inspections:', e);
+        inspections = [];
       }
     }
 
-    const defaultInspections = [
-      // Page 1
-      { title: 'Tower Crane Integrity Check', location: 'Site A - Sector 3', inspector: 'Marcus Vance', date: '09-18-26', time: '09:00 AM', status: 'Scheduled' },
-      { title: 'Scaffolding Safety Audit', location: 'Site B - Main Gate', inspector: 'Elena Gomez', date: '09-18-26', time: '11:30 AM', status: 'Scheduled' },
-      { title: 'Electrical Rig Wiring Review', location: 'Site C - Generator 2', inspector: 'David Kim', date: '09-19-26', time: '01:15 PM', status: 'Scheduled' },
-      { title: 'Excavation Shoring Inspection', location: 'Site A - Trench 4', inspector: 'Carlos Mendez', date: '09-19-26', time: '03:45 PM', status: 'Scheduled' },
-      { title: 'PPE Compliance Patrol', location: 'Site B - Warehouse 2', inspector: 'Sarah Lin', date: '09-20-26', time: '10:00 AM', status: 'Scheduled' },
-      { title: 'Chemical Storage Assessment', location: 'Site C - Hazmat Bay', inspector: 'Dr. Hayes', date: '09-20-26', time: '02:00 PM', status: 'Scheduled' },
-      // Page 2
-      { title: 'Fire Suppression Pipeline Test', location: 'Site A - Sublevel 1', inspector: 'Angela Brooks', date: '09-21-26', time: '08:30 AM', status: 'Scheduled' },
-      { title: 'Fall Arrest Anchor Audit', location: 'Site B - Roof Deck', inspector: 'Marcus Sterling', date: '09-21-26', time: '10:45 AM', status: 'Scheduled' },
-      { title: 'Concrete Pour Formwork Check', location: 'Site C - Block D', inspector: 'Jennifer Ward', date: '09-22-26', time: '01:00 PM', status: 'Scheduled' },
-      { title: 'Heavy Plant Machinery Inspection', location: 'Site A - Depot 1', inspector: 'Michael Vance', date: '09-22-26', time: '03:30 PM', status: 'Scheduled' },
-      { title: 'First Aid Station Supply Audit', location: 'Site B - Clinic Area', inspector: 'Elena Gomez', date: '09-23-26', time: '09:15 AM', status: 'Scheduled' },
-      { title: 'Perimeter Barrier Stability Review', location: 'Site C - Boundary North', inspector: 'David Kim', date: '09-23-26', time: '11:00 AM', status: 'Scheduled' },
-      // Page 3
-      { title: 'Emergency Egress Pathway Check', location: 'Site A - Sector 1', inspector: 'Sarah Lin', date: '09-24-26', time: '09:00 AM', status: 'Scheduled' },
-      { title: 'Ventilation & Air Quality Review', location: 'Site B - Subterranean', inspector: 'Dr. Hayes', date: '09-24-26', time: '11:30 AM', status: 'Scheduled' },
-      { title: 'Hydraulic Lift Systems Testing', location: 'Site C - Sector 2', inspector: 'Carlos Mendez', date: '09-25-26', time: '01:45 PM', status: 'Scheduled' },
-      { title: 'Ground Resistance & Earthing Check', location: 'Site A - Transformer 1', inspector: 'David Kim', date: '09-25-26', time: '03:15 PM', status: 'Scheduled' },
-      { title: 'Confined Space Entry Signoff', location: 'Site B - Tank 3', inspector: 'Marcus Sterling', date: '09-26-26', time: '10:00 AM', status: 'Scheduled' },
-      { title: 'Hazardous Waste Manifest Audit', location: 'Site C - Disposal Area', inspector: 'Angela Brooks', date: '09-26-26', time: '02:30 PM', status: 'Scheduled' }
+    const mockTitles = [
+      'Tower Crane Integrity Check', 'Scaffolding Safety Audit', 'Electrical Rig Wiring Review',
+      'Excavation Shoring Inspection', 'PPE Compliance Patrol', 'Chemical Storage Assessment',
+      'Fire Suppression Pipeline Test', 'Fall Arrest Anchor Audit', 'Concrete Pour Formwork Check',
+      'Heavy Plant Machinery Inspection', 'First Aid Station Supply Audit', 'Perimeter Barrier Stability Review',
+      'Emergency Egress Pathway Check', 'Ventilation & Air Quality Review', 'Hydraulic Lift Systems Testing',
+      'Ground Resistance & Earthing Check', 'Confined Space Entry Signoff', 'Hazardous Waste Manifest Audit'
     ];
 
-    localStorage.setItem('SiteSafety_Inspections', JSON.stringify(defaultInspections));
-    return defaultInspections;
+    inspections = inspections.filter(item => item && item.title && !mockTitles.includes(item.title));
+    localStorage.setItem('SiteSafety_Inspections', JSON.stringify(inspections));
+    return inspections;
   }
 
   function getStoredInspections() {
@@ -1033,7 +1022,33 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentHistoryPage = 1;
     const historyPerPage = 5;
 
+    // Dynamically populate location dropdown only from actually submitted reports
+    function populateHistoryLocations() {
+      if (!filterLocation) return;
+      const allHazards = getStoredHazards();
+      const currentSelected = filterLocation.value || 'all';
+
+      const locSet = new Set();
+      allHazards.forEach(h => {
+        if (h && h.location && typeof h.location === 'string' && h.location.trim()) {
+          locSet.add(h.location.trim());
+        }
+      });
+
+      const uniqueLocations = Array.from(locSet).sort((a, b) => a.localeCompare(b));
+
+      filterLocation.innerHTML = '<option value="all">All Locations</option>';
+      uniqueLocations.forEach(loc => {
+        const opt = document.createElement('option');
+        opt.value = loc;
+        opt.textContent = loc;
+        if (loc === currentSelected) opt.selected = true;
+        filterLocation.appendChild(opt);
+      });
+    }
+
     function renderHistoryList() {
+      populateHistoryLocations();
       const allHazards = getStoredHazards();
       const q = (historySearchInput?.value || '').toLowerCase().trim();
       const locVal = filterLocation?.value || 'all';
@@ -1058,10 +1073,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (pageItems.length === 0) {
         historyCardsContainer.innerHTML = `
-          <div style="text-align: center; padding: 40px; font-weight: 600; color: #555; background: #ffffff; border-radius: 8px; border: 1.5px solid var(--border-input);">
+          <div style="text-align: center; padding: 40px; font-weight: 600; color: #5e7699; background: #ffffff; border-radius: 8px; border: 1.5px solid var(--border-input);">
             No incident reports found matching the selected filters.
           </div>`;
+        if (historyPagination) historyPagination.style.display = 'none';
       } else {
+        if (historyPagination) historyPagination.style.display = 'flex';
         historyCardsContainer.innerHTML = pageItems
           .map((item, index) => {
             const bgClass = index % 2 === 0 ? 'row-white' : 'row-blue';
@@ -1214,6 +1231,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderDashboardInspections() {
       const inspectionsData = getStoredInspections();
+      if (inspectionsData.length === 0) {
+        dashboardRowsList.innerHTML = `
+          <div style="text-align: center; padding: 48px 20px; font-weight: 600; color: #5e7699; font-size: 0.95rem; background: #ffffff; border-radius: 8px; border: 1.5px solid var(--border-input);">
+            No scheduled inspections found. Submitted inspections will appear here.
+          </div>`;
+        if (dashboardPagination) dashboardPagination.style.display = 'none';
+        return;
+      }
+      if (dashboardPagination) dashboardPagination.style.display = 'flex';
+
       const totalInspPages = Math.max(1, Math.ceil(inspectionsData.length / inspPerPage));
       if (currentInspPage > totalInspPages) currentInspPage = totalInspPages;
 
@@ -1620,10 +1647,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (pageItems.length === 0) {
       managerHazardsList.innerHTML = `
-        <div style="text-align: center; padding: 40px; font-weight: 600; color: #555;">
+        <div style="text-align: center; padding: 40px; font-weight: 600; color: #5e7699; background: #ffffff; border-radius: 8px; border: 1.5px solid var(--border-input);">
           No pending hazards found. All current workplace hazards are resolved!
         </div>`;
+      if (managerPagination) managerPagination.style.display = 'none';
     } else {
+      if (managerPagination) managerPagination.style.display = 'flex';
       pageItems.forEach((item, index) => {
         const isBlue = (index % 2 === 1);
         const rowClass = isBlue ? 'hazard-row-blue' : 'hazard-row-white';
@@ -1863,10 +1892,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (pageItems.length === 0) {
         resolvedRowsList.innerHTML = `
-          <div style="text-align: center; padding: 40px; font-weight: 600; color: #555;">
+          <div style="text-align: center; padding: 40px; font-weight: 600; color: #5e7699; background: #ffffff; border-radius: 8px; border: 1.5px solid var(--border-input);">
             No matching resolved hazards found.
           </div>`;
+        if (resolvedPagination) resolvedPagination.style.display = 'none';
       } else {
+        if (resolvedPagination) resolvedPagination.style.display = 'flex';
         pageItems.forEach((item, index) => {
           const isBlue = (index % 2 === 1);
           const rowClass = isBlue ? 'hazard-row-blue' : 'hazard-row-white';
