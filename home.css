@@ -2979,6 +2979,55 @@ input:checked + .slider:before {
   border-color: #999999;
 }
 
+.btn-hazard-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: #0d4fae;
+  color: #ffffff;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 9px 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(13, 79, 174, 0.25);
+}
+
+.btn-hazard-back:hover {
+  background-color: #093c87;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(13, 79, 174, 0.35);
+}
+
+.status-badge-resolved {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-weight: 600 !important;
+  color: #047857 !important;
+  background: #ecfdf5 !important;
+  border: 1.5px solid #a7f3d0 !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+}
+
+.status-badge-pending {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-weight: 600 !important;
+  color: #b45309 !important;
+  background: #fef3c7 !important;
+  border: 1.5px solid #fde68a !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+}
+
 @media (max-width: 600px) {
   .hazard-info-row {
     grid-template-columns: 1fr;

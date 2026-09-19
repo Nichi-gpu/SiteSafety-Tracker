@@ -1771,6 +1771,48 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    // Dynamic handling based on status (Pending vs Resolved)
+    const isResolved = (item.status === 'Resolved');
+    const detailStatusRow = document.getElementById('detail-status-row');
+    const detailStatusText = document.getElementById('detail-status-text');
+    const detailStatusBadge = document.getElementById('detail-status-badge');
+
+    if (detailStatusRow && detailStatusText && detailStatusBadge) {
+      detailStatusRow.style.display = 'flex';
+      if (isResolved) {
+        detailStatusBadge.className = 'hazard-info-box status-badge-resolved';
+        detailStatusText.textContent = item.resolvedDate ? `Resolved on ${item.resolvedDate}` : 'Resolved';
+      } else {
+        detailStatusBadge.className = 'hazard-info-box status-badge-pending';
+        detailStatusText.textContent = 'Pending Investigation';
+      }
+    }
+
+    // Hide or Show "Resolved" Action Button
+    if (btnHazardResolved) {
+      // If already resolved, hide the button completely
+      btnHazardResolved.style.display = isResolved ? 'none' : 'inline-flex';
+    }
+
+    // Adapt the secondary button into a clear Back button when viewed as Resolved
+    if (btnHazardCancel) {
+      if (isResolved) {
+        btnHazardCancel.className = 'btn-hazard-back';
+        btnHazardCancel.innerHTML = `
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span>Back to Resolved Reports</span>
+        `;
+        btnHazardCancel.setAttribute('data-target', 'manager-resolved.html');
+      } else {
+        btnHazardCancel.className = 'btn-hazard-cancel';
+        btnHazardCancel.innerHTML = 'Cancel';
+        btnHazardCancel.setAttribute('data-target', 'manager-home.html');
+      }
+    }
+
     if (managerListView && managerDetailView) {
       managerListView.classList.add('hidden');
       managerDetailView.classList.remove('hidden');
@@ -1787,8 +1829,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (btnHazardCancel) {
-    btnHazardCancel.addEventListener('click', () => {
-      closeHazardDetail();
+    btnHazardCancel.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (window.location.pathname.includes('manager-hazard-detail.html')) {
+        const target = btnHazardCancel.getAttribute('data-target') || 'manager-resolved.html';
+        window.location.href = target;
+      } else {
+        closeHazardDetail();
+      }
     });
   }
 
@@ -1863,16 +1911,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const ticketParam = urlParams.get('ticket');
   if (ticketParam) {
     const allHazards = getStoredHazards();
-    const foundHazard = allHazards.find(h => h.ticket === ticketParam) || {
-      ticket: ticketParam,
-      location: 'Site X - Location',
-      category: 'General Workplace Incident',
-      date: '03-15-26',
-      time: '10:00 AM',
-      urgency: 'High',
-      status: 'Pending'
-    };
-    openHazardDetail(foundHazard);
+    const found = allHazards.find(h => h.ticket.toLowerCase() === ticketParam.toLowerCase());
+    if (found) {
+      openHazardDetail(found);
+    } else if (typeof API !== 'undefined' && API.hazards) {
+      API.hazards.get(ticketParam).then(h => {
+        if (h && h.ticket) openHazardDetail(h);
+      }).catch(() => {
+        openHazardDetail({
+          ticket: ticketParam,
+          location: 'Site Incident Record',
+          category: 'General Workplace Incident',
+          date: '',
+          time: '',
+          urgency: 'Medium',
+          status: 'Resolved'
+        });
+      });
+    }
   } else if (managerHazardsList) {
     renderPendingHazards();
   }
