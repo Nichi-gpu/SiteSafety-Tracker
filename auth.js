@@ -97,24 +97,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await API.auth.login(identifier, password);
         const user = res.user || {};
 
+        // Determine effective role: prioritize the role chosen on landing page ('selectedRole')
+        const chosenRole = localStorage.getItem('selectedRole');
+        const effectiveRole = chosenRole || user.role || 'staff';
+
         // Persist session info in localStorage
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('userEmail', user.email || identifier);
         localStorage.setItem('username', user.username || identifier);
-        localStorage.setItem('userRole', user.role || selectedRole);
+        localStorage.setItem('userRole', effectiveRole);
         localStorage.setItem('userCompany', user.company || '');
         localStorage.setItem('signupTime', user.signup_time || '');
         localStorage.setItem('lastLoginTime', user.last_login_time || '');
-        localStorage.setItem('selectedRole', user.role || selectedRole);
+        localStorage.setItem('selectedRole', effectiveRole);
 
         showMessage(loginForm, `Login successful! Welcome back, ${user.username || user.email}!`, 'success');
 
-        // Redirect based on user's actual role in database
+        // Redirect based on selected / effective role
         setTimeout(() => {
-          if (user.role === 'manager') {
-            window.location.href = 'manager-home.html';
-          } else {
+          if (effectiveRole === 'staff') {
             window.location.href = 'home.html';
+          } else {
+            window.location.href = 'manager-home.html';
           }
         }, 600);
 
