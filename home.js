@@ -196,13 +196,14 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('SiteSafety_Notifications', JSON.stringify(notifs));
   }
 
-  function addNotification(title) {
+  function addNotification(title, meta = {}) {
     const notifs = getStoredNotifications();
     notifs.unshift({
       id: Date.now().toString(),
       title: title,
       time: 'Just now',
-      unread: true
+      unread: true,
+      ...meta
     });
     saveStoredNotifications(notifs);
 
@@ -298,6 +299,50 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    function resolveNotificationTarget(notif) {
+      const isManager = (localStorage.getItem('selectedRole') === 'manager');
+      const title = (notif.title || '').toLowerCase();
+      
+      if (notif.url) {
+        return notif.url;
+      }
+
+      // Check for ticket in notification (e.g. ABC-2026-0310-01)
+      const ticketMatch = (notif.title || '').match(/[A-Z0-9]+-\d{4}-\d{4}-\d+/i);
+      const ticketId = ticketMatch ? ticketMatch[0] : (notif.ticket || null);
+
+      // 1. Resolved hazard notification
+      if (title.includes('resolved')) {
+        return isManager ? 'manager-resolved.html' : 'report-history.html';
+      }
+
+      // 2. Pending / Filed hazard notification
+      if (title.includes('hazard') || title.includes('incident') || title.includes('ticket')) {
+        if (ticketId) {
+          const allHazards = getStoredHazards();
+          const found = allHazards.find(h => h.ticket.toLowerCase() === ticketId.toLowerCase());
+          if (found) {
+            localStorage.setItem('lastSubmittedReport', JSON.stringify(found));
+          }
+          return isManager ? `manager-home.html?ticket=${encodeURIComponent(ticketId)}` : 'report-status.html';
+        }
+        return isManager ? 'manager-home.html' : 'report-status.html';
+      }
+
+      // 3. Inspection notification
+      if (title.includes('inspect') || title.includes('audit')) {
+        return isManager ? 'manager-add-inspection.html' : 'dashboard.html';
+      }
+
+      // 4. Safety protocol / policy
+      if (title.includes('protocol') || title.includes('policy') || title.includes('guide')) {
+        return isManager ? 'manager-home.html' : 'dashboard.html';
+      }
+
+      // Default fallback
+      return isManager ? 'manager-home.html' : 'home.html';
+    }
+
     function renderNotifications() {
       const listContainer = document.getElementById('notif-list-container');
       if (!listContainer) return;
@@ -311,12 +356,61 @@ document.addEventListener('DOMContentLoaded', () => {
       listContainer.innerHTML = notifs
         .map(
           n => `
-        <div class="notif-item">
-          <span class="notif-item-title">${escapeHTML(n.title)}</span>
-          <span class="notif-item-time">${escapeHTML(n.time)}</span>
+        <div class="notif-item ${n.unread ? 'unread' : ''}" data-id="${escapeHTML(n.id)}" tabindex="0" role="button" title="Click to view">
+          <div class="notif-item-top">
+            <span class="notif-item-title">${escapeHTML(n.title)}</span>
+            ${n.unread ? '<span class="notif-unread-dot" title="Unread"></span>' : ''}
+          </div>
+          <div class="notif-item-bottom">
+            <span class="notif-item-time">${escapeHTML(n.time)}</span>
+            <span class="notif-item-link-text">Go to page &rarr;</span>
+          </div>
         </div>`
         )
         .join('');
+
+      // Wire click and keyboard navigation on each notification
+      listContainer.querySelectorAll('.notif-item').forEach(item => {
+        const notifId = item.getAttribute('data-id');
+        const notif = notifs.find(n => n.id === notifId);
+        if (!notif) return;
+
+        const handleNotifClick = () => {
+          // Mark as read
+          notif.unread = false;
+          saveStoredNotifications(notifs);
+
+          // Close dropdown
+          notifDropdown.classList.remove('show');
+
+          // Resolve target URL
+          const targetUrl = resolveNotificationTarget(notif);
+          
+          // Check if already on manager-home.html with active detail function
+          const ticketMatch = (notif.title || '').match(/[A-Z0-9]+-\d{4}-\d{4}-\d+/i);
+          const ticketId = ticketMatch ? ticketMatch[0] : (notif.ticket || null);
+
+          if (ticketId && window.location.pathname.includes('manager-home.html') && typeof openHazardDetail === 'function') {
+            const allHazards = getStoredHazards();
+            const found = allHazards.find(h => h.ticket.toLowerCase() === ticketId.toLowerCase());
+            if (found) {
+              openHazardDetail(found);
+              return;
+            }
+          }
+
+          // Navigate to destination
+          window.location.href = targetUrl;
+        };
+
+        item.addEventListener('click', handleNotifClick);
+        item.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleNotifClick();
+          }
+        });
+      });
     }
 
     notifBtn.addEventListener('click', (e) => {
@@ -667,7 +761,7 @@ document.addEventListener('DOMContentLoaded', () => {
       saveStoredHazards(allHazards);
 
       // Add system activity notification
-      addNotification(`New Hazard Filed: ${reportData.ticket} (${reportData.category})`);
+      addNotification(`New Hazard Filed: ${reportData.ticket} (${reportData.category})`, { ticket: reportData.ticket });
 
       showToast(`Report ${ticketNumber} created successfully! Redirecting...`, 'success');
       setTimeout(() => {
@@ -1040,7 +1134,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const inspections = getStoredInspections();
       inspections.unshift(newItem);
       saveStoredInspections(inspections);
-      addNotification(`New Inspection Scheduled: ${newItem.title}`);
+      addNotification(`New Inspection Scheduled: ${newItem.title}`, { url: 'manager-add-inspection.html' });
       currentInspPage = 1;
       renderDashboardInspections();
     };
@@ -1462,7 +1556,7 @@ document.addEventListener('DOMContentLoaded', () => {
         allHazards[targetIndex].resolvedDate = new Date().toLocaleDateString();
         saveStoredHazards(allHazards);
 
-        addNotification(`Hazard Ticket ${ticketToResolve} Marked as Resolved`);
+        addNotification(`Hazard Ticket ${ticketToResolve} Marked as Resolved`, { ticket: ticketToResolve });
         showToast(`Hazard "${ticketToResolve}" officially RESOLVED & archived!`, 'success');
       }
 
