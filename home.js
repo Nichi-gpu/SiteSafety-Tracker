@@ -57,11 +57,27 @@ document.addEventListener('DOMContentLoaded', () => {
      USER SESSION & PROFILE DROPDOWN
      ============================================ */
   function initUserSession() {
-    const username = localStorage.getItem('username') || localStorage.getItem('userEmail') || 'Andrei';
-    const role = localStorage.getItem('userRole') || 'staff';
+    const rawUsername = localStorage.getItem('username');
+    const email = localStorage.getItem('userEmail') || '';
+    const username = rawUsername || (email ? email.split('@')[0] : 'User');
+    const role = (localStorage.getItem('userRole') || 'staff').toLowerCase();
+
+    // Top-right dropdown display
     const nameEls = document.querySelectorAll('#display-account-name, .user-name');
     nameEls.forEach(el => {
       if (el) el.textContent = username;
+    });
+
+    // Sidebar footer display (Option A: displays username and role)
+    const sidebarUsernames = document.querySelectorAll('#sidebar-username-label');
+    sidebarUsernames.forEach(el => {
+      if (el) el.textContent = username;
+    });
+
+    const sidebarRoles = document.querySelectorAll('#sidebar-role-label');
+    const roleTitle = (role === 'manager' || role === 'admin') ? 'Administrator' : 'Reporting Personnel';
+    sidebarRoles.forEach(el => {
+      if (el) el.textContent = roleTitle;
     });
   }
   initUserSession();
@@ -70,46 +86,31 @@ document.addEventListener('DOMContentLoaded', () => {
      2. UNIFIED DATA STORAGE & SEEDING
      ============================================ */
 
-  // Initial Seed for Hazards (both Pending and Resolved)
+  // Initial Seed for Hazards (Only genuine user-created reports)
   function initHazardStore() {
     const raw = localStorage.getItem('SiteSafety_Hazards');
+    let hazards = [];
     if (raw) {
       try {
-        return JSON.parse(raw);
+        hazards = JSON.parse(raw);
+        if (!Array.isArray(hazards)) hazards = [];
       } catch (e) {
         console.error('Error parsing SiteSafety_Hazards:', e);
+        hazards = [];
       }
     }
 
-    const defaultHazards = [
-      // Pending hazards
-      { ticket: 'ABC-2026-0315-01', location: 'Site Alpha - North Wing', category: 'Electrical Hazard', date: '03-15-26', time: '09:30 AM', urgency: 'Critical', status: 'Pending', cause: 'Exposed high-voltage conduit near rain gutter.', personnel: { name: 'Michael Vance', position: 'Lead Safety Officer', phone: '+1 (555) 201-4491', dept: 'Security' }, photo: '' },
-      { ticket: 'ABC-2026-0315-02', location: 'Site Beta - Crane Zone', category: 'Structural Defect', date: '03-15-26', time: '10:15 AM', urgency: 'High', status: 'Pending', cause: 'Loose anchor pins discovered on primary mobile crane counterweight.', personnel: { name: 'Elena Gomez', position: 'First Aid Coordinator', phone: '+1 (555) 431-7705', dept: 'Medical' }, photo: '' },
-      { ticket: 'ABC-2026-0315-03', location: 'Site Gamma - Chem Storage', category: 'Chemical Spillage', date: '03-15-26', time: '11:00 AM', urgency: 'Urgent', status: 'Pending', cause: 'Chemical solvent drum seal failure causing strong fumes.', personnel: { name: 'Dr. Robert Hayes', position: 'Chief Medical Officer', phone: '+1 (555) 388-1200', dept: 'Medical' }, photo: '' },
-      { ticket: 'ABC-2026-0315-04', location: 'Site Delta - Excavation A', category: 'Trench Collapse Risk', date: '03-15-26', time: '01:20 PM', urgency: 'Critical', status: 'Pending', cause: 'Shifting substrate on south trench wall after rain.', personnel: { name: 'Marcus Sterling', position: 'Hazard Mitigation Chief', phone: '+1 (555) 883-6629', dept: 'Emergency' }, photo: '' },
-      { ticket: 'ABC-2026-0315-05', location: 'Site Epsilon - Level 4', category: 'Missing Guardrail', date: '03-15-26', time: '02:45 PM', urgency: 'High', status: 'Pending', cause: 'Edge protection removed during dry-wall staging and not replaced.', personnel: { name: 'Sarah Lin', position: 'Emergency Response Lead', phone: '+1 (555) 911-3042', dept: 'Emergency' }, photo: '' },
-      { ticket: 'ABC-2026-0315-06', location: 'Site Zeta - Main Hallway', category: 'Water Accumulation', date: '03-15-26', time: '04:10 PM', urgency: 'Medium', status: 'Pending', cause: 'Overhead AC condensate drip creating slip hazard.', personnel: { name: 'Jennifer Ward', position: 'Compliance Supervisor', phone: '+1 (555) 319-5504', dept: 'Administration' }, photo: '' },
-      { ticket: 'ABC-2026-0316-07', location: 'Site Alpha - West Tower', category: 'Exposed High-Voltage', date: '03-16-26', time: '08:45 AM', urgency: 'Critical', status: 'Pending', cause: 'High voltage junction box opened by sub-contractor.', personnel: { name: 'David Kim', position: 'Perimeter Security', phone: '+1 (555) 670-8821', dept: 'Security' }, photo: '' },
-      { ticket: 'ABC-2026-0316-08', location: 'Site Beta - Loading Bay', category: 'Faulty Scaffold Anchor', date: '03-16-26', time: '09:50 AM', urgency: 'High', status: 'Pending', cause: 'Connector clamp fractured on exterior scaffold column.', personnel: { name: 'Angela Brooks', position: 'Site Safety Administrator', phone: '+1 (555) 472-9918', dept: 'Administration' }, photo: '' },
-      { ticket: 'ABC-2026-0316-09', location: 'Site Gamma - Roof Edge', category: 'Loose HVAC Ducting', date: '03-16-26', time: '11:30 AM', urgency: 'Medium', status: 'Pending', cause: 'High wind gusts detached corner sheet metal.', personnel: { name: 'Michael Vance', position: 'Lead Safety Officer', phone: '+1 (555) 201-4491', dept: 'Security' }, photo: '' },
-      { ticket: 'ABC-2026-0316-10', location: 'Site Delta - Workshop B', category: 'Gas Cylinder Leak', date: '03-16-26', time: '01:15 PM', urgency: 'Critical', status: 'Pending', cause: 'Faulty regulator on acetylene welding tank.', personnel: { name: 'Marcus Sterling', position: 'Hazard Mitigation Chief', phone: '+1 (555) 883-6629', dept: 'Emergency' }, photo: '' },
-      { ticket: 'ABC-2026-0316-11', location: 'Site Epsilon - Stairwell 2', category: 'Emergency Light Out', date: '03-16-26', time: '03:00 PM', urgency: 'Medium', status: 'Pending', cause: 'Battery backup module burned out.', personnel: { name: 'Elena Gomez', position: 'First Aid Coordinator', phone: '+1 (555) 431-7705', dept: 'Medical' }, photo: '' },
-      { ticket: 'ABC-2026-0316-12', location: 'Site Zeta - South Ramp', category: 'Oil Spill on Ramp', date: '03-16-26', time: '04:40 PM', urgency: 'High', status: 'Pending', cause: 'Forklift hydraulic line ruptured during transit.', personnel: { name: 'Sarah Lin', position: 'Emergency Response Lead', phone: '+1 (555) 911-3042', dept: 'Emergency' }, photo: '' },
+    // Purge mock/sample seed hazards so only genuine user-created reports remain
+    const mockReporters = ['Michael Vance', 'Elena Gomez', 'Dr. Robert Hayes', 'Dr. Hayes', 'Marcus Sterling', 'Sarah Lin', 'Jennifer Ward', 'David Kim', 'Angela Brooks'];
+    hazards = hazards.filter(h => {
+      if (!h || !h.ticket) return false;
+      const isMockTicket = /^ABC-2026-(0315|0316|0310|0305)-/i.test(h.ticket);
+      const isMockReporter = h.personnel && mockReporters.includes(h.personnel.name);
+      return !isMockTicket && !isMockReporter;
+    });
 
-      // Resolved hazards
-      { ticket: 'ABC-2026-0310-01', location: 'Site Alpha - North Wing', category: 'Exposed Wiring', date: '03-10-26', time: '09:30 AM', urgency: 'Medium', status: 'Resolved', cause: 'Chafed wire conduit replaced with industrial flex casing.', personnel: { name: 'Sarah Lin', position: 'Emergency Lead', phone: '+1 (555) 911-3042', dept: 'Emergency' }, photo: '' },
-      { ticket: 'ABC-2026-0310-02', location: 'Site Beta - Crane Zone', category: 'Scaffold Clamp Failure', date: '03-10-26', time: '11:15 AM', urgency: 'High', status: 'Resolved', cause: 'Heavy-duty steel coupler installed and tested.', personnel: { name: 'Michael Vance', position: 'Lead Safety Officer', phone: '+1 (555) 201-4491', dept: 'Security' }, photo: '' },
-      { ticket: 'ABC-2026-0310-03', location: 'Site Gamma - Chem Storage', category: 'Acid Spillage', date: '03-10-26', time: '01:45 PM', urgency: 'Critical', status: 'Resolved', cause: 'Neutralizing agent applied and hazardous waste disposed.', personnel: { name: 'Dr. Hayes', position: 'Chief Medical Officer', phone: '+1 (555) 388-1200', dept: 'Medical' }, photo: '' },
-      { ticket: 'ABC-2026-0310-04', location: 'Site Delta - Substation 4', category: 'Circuit Breaker Trip', date: '03-10-26', time: '03:10 PM', urgency: 'Medium', status: 'Resolved', cause: 'Overload breaker replaced and re-calibrated.', personnel: { name: 'Angela Brooks', position: 'Administrator', phone: '+1 (555) 472-9918', dept: 'Administration' }, photo: '' },
-      { ticket: 'ABC-2026-0310-05', location: 'Site Epsilon - Level 2', category: 'Oil On Walkway', date: '03-10-26', time: '04:25 PM', urgency: 'Low', status: 'Resolved', cause: 'Industrial degreaser scrubbed and non-slip mats laid.', personnel: { name: 'Elena Gomez', position: 'Coordinator', phone: '+1 (555) 431-7705', dept: 'Medical' }, photo: '' },
-      { ticket: 'ABC-2026-0310-06', location: 'Site Zeta - Loading Gate', category: 'Damaged Safety Net', date: '03-10-26', time: '05:00 PM', urgency: 'High', status: 'Resolved', cause: 'New high-tensile safety netting fastened.', personnel: { name: 'David Kim', position: 'Perimeter Guard', phone: '+1 (555) 670-8821', dept: 'Security' }, photo: '' },
-      { ticket: 'ABC-2026-0305-07', location: 'Site Alpha - West Tower', category: 'Gas Pressure Anomaly', date: '03-05-26', time: '08:45 AM', urgency: 'Critical', status: 'Resolved', cause: 'Pressure relief valve cleaned and certified.', personnel: { name: 'Marcus Sterling', position: 'Chief', phone: '+1 (555) 883-6629', dept: 'Emergency' }, photo: '' },
-      { ticket: 'ABC-2026-0305-08', location: 'Site Beta - Workshop 1', category: 'Grinder Guard Detached', date: '03-05-26', time: '10:20 AM', urgency: 'Medium', status: 'Resolved', cause: 'Steel guard re-bolted with torque wrench.', personnel: { name: 'Jennifer Ward', position: 'Supervisor', phone: '+1 (555) 319-5504', dept: 'Administration' }, photo: '' },
-      { ticket: 'ABC-2026-0305-09', location: 'Site Gamma - Roof Edge', category: 'Harness Anchor Loose', date: '03-05-26', time: '01:30 PM', urgency: 'High', status: 'Resolved', cause: 'Chemical anchor bolts installed and load pull-tested.', personnel: { name: 'Sarah Lin', position: 'Lead', phone: '+1 (555) 911-3042', dept: 'Emergency' }, photo: '' }
-    ];
-
-    localStorage.setItem('SiteSafety_Hazards', JSON.stringify(defaultHazards));
-    return defaultHazards;
+    localStorage.setItem('SiteSafety_Hazards', JSON.stringify(hazards));
+    return hazards;
   }
 
   function getStoredHazards() {
@@ -170,22 +171,29 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initial Seed for System Notifications
   function initNotificationStore() {
     const raw = localStorage.getItem('SiteSafety_Notifications');
+    let notifs = [];
     if (raw) {
       try {
-        return JSON.parse(raw);
+        notifs = JSON.parse(raw);
+        if (!Array.isArray(notifs)) notifs = [];
       } catch (e) {
         console.error('Error parsing SiteSafety_Notifications:', e);
+        notifs = [];
       }
     }
 
-    const defaultNotifs = [
-      { id: '1', title: 'New Safety Protocol Published for Q3', time: '10 mins ago', unread: true },
-      { id: '2', title: 'Scaffolding Audit Inspection Completed', time: '1 hour ago', unread: true },
-      { id: '3', title: 'Hazard Ticket ABC-2026-0310-01 Marked as Resolved', time: 'Yesterday', unread: false }
-    ];
+    // Purge mock seed notifications (IDs 1, 2, 3 or placeholder protocol/scaffolding texts)
+    notifs = notifs.filter(n => {
+      if (!n || !n.title) return false;
+      if (n.id === '1' || n.id === '2' || n.id === '3') return false;
+      if (n.title.includes('New Safety Protocol Published for Q3')) return false;
+      if (n.title.includes('Scaffolding Audit Inspection Completed')) return false;
+      if (n.title.includes('ABC-2026-0310-01 Marked as Resolved')) return false;
+      return true;
+    });
 
-    localStorage.setItem('SiteSafety_Notifications', JSON.stringify(defaultNotifs));
-    return defaultNotifs;
+    localStorage.setItem('SiteSafety_Notifications', JSON.stringify(notifs));
+    return notifs;
   }
 
   function getStoredNotifications() {
@@ -194,7 +202,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function saveStoredNotifications(notifs) {
     localStorage.setItem('SiteSafety_Notifications', JSON.stringify(notifs));
+    updateNotifBadge();
   }
+
+  function updateNotifBadge() {
+    const notifs = getStoredNotifications();
+    const hasUnread = notifs.some(n => n && n.unread);
+    const badges = document.querySelectorAll('.notif-badge');
+    badges.forEach(badge => {
+      badge.style.display = hasUnread ? 'block' : 'none';
+    });
+  }
+  // Initialize notification badge state on page load
+  updateNotifBadge();
 
   function addNotification(title, meta = {}) {
     const notifs = getStoredNotifications();
@@ -206,12 +226,6 @@ document.addEventListener('DOMContentLoaded', () => {
       ...meta
     });
     saveStoredNotifications(notifs);
-
-    // Update notification bell badge if visible
-    const badge = document.querySelector('.notif-badge');
-    if (badge) {
-      badge.style.display = 'block';
-    }
   }
 
   /* ============================================
@@ -419,10 +433,20 @@ document.addEventListener('DOMContentLoaded', () => {
       notifDropdown.classList.toggle('show', !isOpen);
 
       if (!isOpen) {
+        // Mark all notifications as read when viewed
+        const notifs = getStoredNotifications();
+        let changed = false;
+        notifs.forEach(n => {
+          if (n && n.unread) {
+            n.unread = false;
+            changed = true;
+          }
+        });
+        if (changed) {
+          saveStoredNotifications(notifs);
+        }
         renderNotifications();
-        // Clear yellow badge dot
-        const badge = document.querySelector('.notif-badge');
-        if (badge) badge.style.display = 'none';
+        updateNotifBadge();
       }
     });
 
@@ -527,16 +551,35 @@ document.addEventListener('DOMContentLoaded', () => {
       </svg>`
   };
 
-  const contactsData = [
-    { name: 'Michael Vance', position: 'Head of Site Security', phone: '+1 (555) 201-4491', email: 'm.vance@sitesafety.com', dept: 'Security' },
-    { name: 'Sarah Lin', position: 'Emergency Response Lead', phone: '+1 (555) 911-3042', email: 's.lin@sitesafety.com', dept: 'Emergency' },
-    { name: 'Dr. Robert Hayes', position: 'Chief Medical Officer', phone: '+1 (555) 388-1200', email: 'r.hayes@sitesafety.com', dept: 'Medical' },
-    { name: 'Angela Brooks', position: 'Site Safety Administrator', phone: '+1 (555) 472-9918', email: 'a.brooks@sitesafety.com', dept: 'Administration' },
-    { name: 'David Kim', position: 'Perimeter Security Officer', phone: '+1 (555) 670-8821', email: 'd.kim@sitesafety.com', dept: 'Security' },
-    { name: 'Elena Gomez', position: 'First Aid Coordinator', phone: '+1 (555) 431-7705', email: 'e.gomez@sitesafety.com', dept: 'Medical' },
-    { name: 'Marcus Sterling', position: 'Hazard Mitigation Chief', phone: '+1 (555) 883-6629', email: 'm.sterling@sitesafety.com', dept: 'Emergency' },
-    { name: 'Jennifer Ward', position: 'Compliance Supervisor', phone: '+1 (555) 319-5504', email: 'j.ward@sitesafety.com', dept: 'Administration' }
-  ];
+  // User-Managed Contact Directory Store
+  function initContactStore() {
+    const raw = localStorage.getItem('SiteSafety_Contacts');
+    let contacts = [];
+    if (raw) {
+      try {
+        contacts = JSON.parse(raw);
+        if (!Array.isArray(contacts)) contacts = [];
+      } catch (e) {
+        console.error('Error parsing SiteSafety_Contacts:', e);
+        contacts = [];
+      }
+    }
+
+    // Purge mock contact seeds so only user-added contacts exist
+    const mockNames = ['Michael Vance', 'Sarah Lin', 'Dr. Robert Hayes', 'Dr. Hayes', 'Angela Brooks', 'David Kim', 'Elena Gomez', 'Marcus Sterling', 'Jennifer Ward'];
+    contacts = contacts.filter(c => c && c.name && !mockNames.includes(c.name));
+
+    localStorage.setItem('SiteSafety_Contacts', JSON.stringify(contacts));
+    return contacts;
+  }
+
+  function getStoredContacts() {
+    return initContactStore();
+  }
+
+  function saveStoredContacts(contacts) {
+    localStorage.setItem('SiteSafety_Contacts', JSON.stringify(contacts));
+  }
 
   let currentDept = 'all';
   let searchQuery = '';
@@ -546,16 +589,18 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderContacts() {
     if (!contactCardsList) return;
 
+    const contactsData = getStoredContacts();
+
     const filtered = contactsData.filter((item) => {
-      const matchDept = currentDept === 'all' || item.dept.toLowerCase() === currentDept.toLowerCase();
+      const matchDept = currentDept === 'all' || (item.dept && item.dept.toLowerCase() === currentDept.toLowerCase());
       const query = searchQuery.toLowerCase().trim();
       const matchSearch =
         !query ||
-        item.name.toLowerCase().includes(query) ||
-        item.position.toLowerCase().includes(query) ||
-        item.phone.toLowerCase().includes(query) ||
-        item.email.toLowerCase().includes(query) ||
-        item.dept.toLowerCase().includes(query);
+        (item.name && item.name.toLowerCase().includes(query)) ||
+        (item.position && item.position.toLowerCase().includes(query)) ||
+        (item.phone && item.phone.toLowerCase().includes(query)) ||
+        (item.email && item.email.toLowerCase().includes(query)) ||
+        (item.dept && item.dept.toLowerCase().includes(query));
 
       return matchDept && matchSearch;
     });
@@ -567,16 +612,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const paginatedItems = filtered.slice(startIndex, startIndex + itemsPerPage);
 
     if (paginatedItems.length === 0) {
-      contactCardsList.innerHTML = `
-        <div class="no-results">
-          <p>No contacts found matching your search criteria.</p>
-        </div>
-      `;
+      if (contactsData.length === 0) {
+        contactCardsList.innerHTML = `
+          <div class="contact-empty-state">
+            <svg class="contact-empty-icon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            <div class="contact-empty-title">No Contacts in Directory</div>
+            <div class="contact-empty-subtitle">Click "+ Add Contact" above to add your team members to the directory.</div>
+          </div>
+        `;
+      } else {
+        contactCardsList.innerHTML = `
+          <div class="no-results">
+            <p>No contacts found matching your search or filter criteria.</p>
+          </div>
+        `;
+      }
     } else {
       contactCardsList.innerHTML = paginatedItems
-        .map((contact) => {
-          const badgeClass = `badge-${contact.dept.toLowerCase()}`;
-          const icon = badgeIcons[contact.dept] || '';
+        .map((contact, idx) => {
+          const badgeClass = `badge-${(contact.dept || 'security').toLowerCase()}`;
+          const icon = badgeIcons[contact.dept] || badgeIcons['Security'];
 
           return `
             <div class="contact-card">
@@ -586,11 +646,17 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
               <div class="contact-phone">${escapeHTML(contact.phone)}</div>
               <div class="contact-email">${escapeHTML(contact.email)}</div>
-              <div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                 <span class="badge-dept ${badgeClass}">
                   ${icon}
                   ${escapeHTML(contact.dept)}
                 </span>
+                <button type="button" class="contact-delete-btn" data-contact-id="${escapeHTML(contact.id || '')}" data-index="${startIndex + idx}" title="Delete contact" aria-label="Delete contact">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
               </div>
             </div>
           `;
@@ -660,8 +726,87 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Handle contact deletion
   if (contactCardsList) {
+    contactCardsList.addEventListener('click', (e) => {
+      const delBtn = e.target.closest('.contact-delete-btn');
+      if (delBtn) {
+        const contactId = delBtn.getAttribute('data-contact-id');
+        let contacts = getStoredContacts();
+        if (contactId) {
+          contacts = contacts.filter(c => c.id !== contactId);
+        } else {
+          const contactIndex = parseInt(delBtn.getAttribute('data-index'), 10);
+          if (!isNaN(contactIndex) && contactIndex >= 0 && contactIndex < contacts.length) {
+            contacts.splice(contactIndex, 1);
+          }
+        }
+        saveStoredContacts(contacts);
+        renderContacts();
+        showToast('Contact removed from directory.', 'info');
+      }
+    });
+
     renderContacts();
+  }
+
+  // Handle Add Contact Modal
+  const openAddContactModalBtn = document.getElementById('open-add-contact-modal-btn');
+  const addContactModal = document.getElementById('add-contact-modal');
+  const closeAddContactModalBtn = document.getElementById('close-add-contact-modal-btn');
+  const cancelAddContactBtn = document.getElementById('cancel-add-contact-btn');
+  const addContactForm = document.getElementById('add-contact-form');
+
+  if (openAddContactModalBtn && addContactModal) {
+    openAddContactModalBtn.addEventListener('click', () => {
+      addContactModal.style.display = 'flex';
+      const firstInput = document.getElementById('contact-name-input');
+      if (firstInput) firstInput.focus();
+    });
+
+    const closeModal = () => {
+      addContactModal.style.display = 'none';
+      if (addContactForm) addContactForm.reset();
+    };
+
+    if (closeAddContactModalBtn) closeAddContactModalBtn.addEventListener('click', closeModal);
+    if (cancelAddContactBtn) cancelAddContactBtn.addEventListener('click', closeModal);
+
+    addContactModal.addEventListener('click', (e) => {
+      if (e.target === addContactModal) closeModal();
+    });
+
+    if (addContactForm) {
+      addContactForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = (document.getElementById('contact-name-input')?.value || '').trim();
+        const position = (document.getElementById('contact-pos-input')?.value || '').trim();
+        const phone = (document.getElementById('contact-phone-input')?.value || '').trim();
+        const email = (document.getElementById('contact-email-input')?.value || '').trim();
+        const dept = document.getElementById('contact-dept-input')?.value || 'Security';
+
+        if (!name || !position || !phone || !email) {
+          showToast('Please fill in all contact fields.', 'error');
+          return;
+        }
+
+        const newContact = {
+          id: 'contact-' + Date.now(),
+          name,
+          position,
+          phone,
+          email,
+          dept
+        };
+
+        const contacts = getStoredContacts();
+        contacts.unshift(newContact);
+        saveStoredContacts(contacts);
+        closeModal();
+        renderContacts();
+        showToast(`Contact "${name}" added to directory.`, 'success');
+      });
+    }
   }
 
   /* ============================================

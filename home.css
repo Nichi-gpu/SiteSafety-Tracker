@@ -146,6 +146,7 @@ body {
 }
 
 .notif-badge {
+  display: none;
   position: absolute;
   top: 4px;
   right: 6px;
@@ -360,10 +361,75 @@ body {
 .sidebar-footer {
   position: relative;
   z-index: 2;
-  padding: 16px 18px;
+  padding: 14px 16px;
   background: rgba(8, 23, 51, 0.85);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(4px);
+}
+
+/* Sidebar User Status Card (Option A) */
+.sidebar-user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.sidebar-user-card:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.sidebar-user-avatar svg {
+  width: 19px;
+  height: 19px;
+  stroke: #ffffff;
+}
+
+.sidebar-user-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  text-align: left;
+}
+
+.sidebar-username {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+
+.sidebar-role {
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
 }
 
 .signout-btn {
@@ -3525,6 +3591,317 @@ input:checked + .slider:before {
   border: 1.5px solid #000000;
   border-radius: 4px;
   object-fit: cover;
+}
+
+/* ============================================
+   STYLED CHOOSE FILE BUTTON & UPLOAD BOX
+   ============================================ */
+.custom-file-upload-wrap {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  background: #f8fafc;
+  border: 1.5px dashed #93c5fd;
+  border-radius: 8px;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.custom-file-upload-wrap:hover {
+  border-color: #0b459b;
+  background: #eff6ff;
+  box-shadow: 0 2px 8px rgba(11, 69, 155, 0.08);
+}
+
+.custom-file-upload-wrap input[type="file"] {
+  width: 100%;
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  color: #334155;
+  cursor: pointer;
+  outline: none;
+}
+
+/* Modern file selector button (Chrome, Edge, Safari, Firefox) */
+input[type="file"]::file-selector-button {
+  background: linear-gradient(135deg, #0b459b 0%, #083375 100%);
+  color: #ffffff;
+  border: none;
+  padding: 7px 16px;
+  border-radius: 6px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  margin-right: 12px;
+  box-shadow: 0 2px 5px rgba(11, 69, 155, 0.25);
+  transition: all 0.2s ease;
+}
+
+input[type="file"]::file-selector-button:hover {
+  background: linear-gradient(135deg, #0d54bc 0%, #0b459b 100%);
+  box-shadow: 0 4px 10px rgba(11, 69, 155, 0.35);
+  transform: translateY(-1px);
+}
+
+input[type="file"]::file-selector-button:active {
+  transform: translateY(0);
+}
+
+/* ============================================
+   CONTACT DIRECTORY: ADD CONTACT & MODAL
+   ============================================ */
+.btn-add-contact {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 44px;
+  padding: 0 16px;
+  background: linear-gradient(135deg, #0b459b 0%, #083375 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(11, 69, 155, 0.25);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-add-contact:hover {
+  background: linear-gradient(135deg, #0d54bc 0%, #0b459b 100%);
+  box-shadow: 0 4px 10px rgba(11, 69, 155, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-add-contact:active {
+  transform: translateY(0);
+}
+
+.btn-add-contact svg {
+  width: 16px;
+  height: 16px;
+}
+
+.contact-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.contact-delete-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.contact-delete-btn:hover {
+  color: #ef4444;
+  background-color: #fee2e2;
+}
+
+.contact-empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  background: #ffffff;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.contact-empty-icon {
+  width: 48px;
+  height: 48px;
+  stroke: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.contact-empty-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.contact-empty-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  max-width: 320px;
+}
+
+/* Modal Overlay & Card */
+.contact-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 23, 51, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+  animation: fadeInContactModal 0.2s ease;
+}
+
+@keyframes fadeInContactModal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.contact-modal-card {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(11, 69, 155, 0.15);
+  overflow: hidden;
+  animation: slideUpContactModal 0.25s ease;
+}
+
+@keyframes slideUpContactModal {
+  from { transform: translateY(18px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.contact-modal-header {
+  background: linear-gradient(135deg, #0b459b 0%, #083375 100%);
+  color: #ffffff;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.contact-modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.contact-modal-close {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.85;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: opacity 0.2s, background-color 0.2s;
+}
+
+.contact-modal-close:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.contact-modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.contact-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.contact-form-group label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.contact-form-group input,
+.contact-form-group select {
+  height: 40px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0 12px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  color: #0f172a;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.contact-form-group input:focus,
+.contact-form-group select:focus {
+  border-color: #0b459b;
+  box-shadow: 0 0 0 3px rgba(11, 69, 155, 0.12);
+}
+
+.contact-modal-footer {
+  padding: 14px 20px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.contact-btn-cancel {
+  padding: 8px 18px;
+  border-radius: 6px;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.contact-btn-cancel:hover {
+  background: #f8fafc;
+}
+
+.contact-btn-submit {
+  padding: 8px 20px;
+  border-radius: 6px;
+  border: none;
+  background: linear-gradient(135deg, #0b459b 0%, #083375 100%);
+  color: #ffffff;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 6px rgba(11, 69, 155, 0.25);
+}
+
+.contact-btn-submit:hover {
+  background: linear-gradient(135deg, #0d54bc 0%, #0b459b 100%);
+  box-shadow: 0 4px 10px rgba(11, 69, 155, 0.35);
 }
 
 /* ============================================
