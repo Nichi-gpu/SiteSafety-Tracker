@@ -1809,10 +1809,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const navResolved = document.getElementById('nav-resolved-hazard');
     const bannerIcon = document.querySelector('.hazard-triangle-art');
 
-    if (bannerTitle && bannerDesc) {
+    if (bannerTitle) {
       if (isResolved) {
         bannerTitle.textContent = 'Resolved Hazard';
-        bannerDesc.textContent = 'Archived Incident Record';
         if (navPending) navPending.classList.remove('active');
         if (navResolved) navResolved.classList.add('active');
         if (bannerIcon) {
@@ -1826,7 +1825,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } else {
         bannerTitle.textContent = 'Pending Hazard';
-        bannerDesc.textContent = 'Needs review or resolution';
         if (navPending) navPending.classList.add('active');
         if (navResolved) navResolved.classList.remove('active');
       }
