@@ -742,6 +742,9 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
         saveStoredContacts(contacts);
+        if (window.API && window.API.contacts && typeof window.API.contacts.delete === 'function' && contactId) {
+          window.API.contacts.delete(contactId).catch(e => console.warn('Sync delete contact to DB:', e.message));
+        }
         renderContacts();
         showToast('Contact removed from directory.', 'info');
       }
@@ -802,6 +805,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const contacts = getStoredContacts();
         contacts.unshift(newContact);
         saveStoredContacts(contacts);
+        if (window.API && window.API.contacts && typeof window.API.contacts.create === 'function') {
+          window.API.contacts.create(newContact).catch(e => console.warn('Sync contact to DB:', e.message));
+        }
         closeModal();
         renderContacts();
         showToast(`Contact "${name}" added to directory.`, 'success');
@@ -904,6 +910,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const allHazards = getStoredHazards();
       allHazards.unshift(reportData);
       saveStoredHazards(allHazards);
+
+      // Record to SQLite database
+      if (window.API && window.API.hazards && typeof window.API.hazards.create === 'function') {
+        window.API.hazards.create(reportData).catch(e => console.warn('Sync hazard to DB:', e.message));
+      }
 
       // Add system activity notification
       addNotification(`New Hazard Filed: ${reportData.ticket} (${reportData.category})`, { ticket: reportData.ticket });
@@ -1276,10 +1287,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Expose global helper for adding inspections dynamically
     window.addInspectionItem = function(newItem) {
+      // 1. Save to Inspections Store
       const inspections = getStoredInspections();
       inspections.unshift(newItem);
       saveStoredInspections(inspections);
-      addNotification(`New Inspection Scheduled: ${newItem.title}`, { url: 'manager-add-inspection.html' });
+
+      // 2. Reflect directly into Pending Hazards Store
+      const now = new Date();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const yy = String(now.getFullYear()).slice(-2);
+      const randNum = Math.floor(10 + Math.random() * 90);
+      const inspTicket = `INSP-2026-${mm}${dd}-${randNum}`;
+
+      const inspectionHazard = {
+        ticket: inspTicket,
+        location: newItem.location || 'Construction Site',
+        category: 'Site Inspection',
+        date: newItem.date || `${mm}-${dd}-${yy}`,
+        time: newItem.time || now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        urgency: 'Medium',
+        status: 'Pending',
+        cause: `Scheduled Site Inspection: "${newItem.title}" assigned to inspector ${newItem.inspector}. Inspection checklist and safety assessment pending on-site completion.`,
+        photo: '',
+        personnel: {
+          name: newItem.inspector || 'Safety Inspector',
+          position: 'Certified Safety Inspector',
+          phone: '+1 (555) 019-2834',
+          dept: 'Safety Inspection & Compliance'
+        },
+        timestamp: now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) + ' | ' + (newItem.time || now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+      };
+
+      const allHazards = getStoredHazards();
+      allHazards.unshift(inspectionHazard);
+      saveStoredHazards(allHazards);
+
+      // 3. Reflect strictly to database (both inspections and hazards tables)
+      if (window.API) {
+        if (window.API.inspections && typeof window.API.inspections.create === 'function') {
+          window.API.inspections.create(newItem).catch(e => console.warn('Sync inspection to DB:', e.message));
+        }
+        if (window.API.hazards && typeof window.API.hazards.create === 'function') {
+          window.API.hazards.create(inspectionHazard).catch(e => console.warn('Sync inspection hazard to DB:', e.message));
+        }
+      }
+
+      addNotification(`New Inspection Scheduled: ${newItem.title} (Pending Ticket: ${inspTicket})`, { ticket: inspTicket, url: 'manager-home.html' });
       currentInspPage = 1;
       renderDashboardInspections();
     };
@@ -1701,6 +1755,11 @@ document.addEventListener('DOMContentLoaded', () => {
         allHazards[targetIndex].resolvedDate = new Date().toLocaleDateString();
         saveStoredHazards(allHazards);
 
+        // Record resolution in SQLite database
+        if (window.API && window.API.hazards && typeof window.API.hazards.resolve === 'function') {
+          window.API.hazards.resolve(ticketToResolve).catch(e => console.warn('Sync resolve to DB:', e.message));
+        }
+
         addNotification(`Hazard Ticket ${ticketToResolve} Marked as Resolved`, { ticket: ticketToResolve });
         showToast(`Hazard "${ticketToResolve}" officially RESOLVED & archived!`, 'success');
       }
@@ -1772,7 +1831,7 @@ document.addEventListener('DOMContentLoaded', () => {
      ============================================ */
   const resolvedRowsList = document.getElementById('manager-resolved-rows-list');
   const resolvedSearchInput = document.getElementById('resolved-search-input');
-  const resolvedLocFilter = document.getElementById('resolved-location-filter');
+  const resolvedLocInput = document.getElementById('resolved-location-input') || document.getElementById('resolved-location-filter');
   const resolvedDateFilter = document.getElementById('resolved-date-filter');
   const resolvedPagination = document.getElementById('manager-resolved-pagination');
   const btnExportResolvedCsv = document.getElementById('btn-export-resolved-csv');
@@ -1784,13 +1843,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderResolvedHazards() {
       const allHazards = getStoredHazards();
       const query = (resolvedSearchInput?.value || '').toLowerCase().trim();
-      const loc = resolvedLocFilter?.value || 'all';
+      const locQuery = (resolvedLocInput?.value || '').toLowerCase().trim();
       const dateVal = resolvedDateFilter?.value || '';
 
       const filteredList = allHazards.filter(item => {
         if (item.status !== 'Resolved') return false;
         const matchQ = !query || item.ticket.toLowerCase().includes(query) || item.category.toLowerCase().includes(query);
-        const matchLoc = loc === 'all' || item.location.toLowerCase().includes(loc.toLowerCase());
+        const matchLoc = !locQuery || locQuery === 'all' || (item.location || '').toLowerCase().includes(locQuery);
         const matchDate = !dateVal || item.date.includes(dateVal);
         return matchQ && matchLoc && matchDate;
       });
@@ -1861,7 +1920,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (resolvedSearchInput) resolvedSearchInput.addEventListener('input', () => { currentResolvedPage = 1; renderResolvedHazards(); });
-    if (resolvedLocFilter) resolvedLocFilter.addEventListener('change', () => { currentResolvedPage = 1; renderResolvedHazards(); });
+    if (resolvedLocInput) {
+      resolvedLocInput.addEventListener('input', () => { currentResolvedPage = 1; renderResolvedHazards(); });
+      resolvedLocInput.addEventListener('change', () => { currentResolvedPage = 1; renderResolvedHazards(); });
+    }
     if (resolvedDateFilter) resolvedDateFilter.addEventListener('change', () => { currentResolvedPage = 1; renderResolvedHazards(); });
 
     if (resolvedPagination) {

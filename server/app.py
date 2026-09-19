@@ -87,6 +87,29 @@ def serve_static(path):
 def health():
     return jsonify({"status": "ok", "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
 
+def log_activity(action, status='SUCCESS', details='', user_id=None, username=None, email=None, role=None):
+    """
+    Strictly record all user and manager activities into the login_logs audit table.
+    """
+    try:
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        ip = request.remote_addr or ''
+        ua = request.headers.get('User-Agent', '')
+        if not username and 'userId' in session:
+            user_id = session.get('userId')
+            username = session.get('username')
+            email = session.get('email')
+            role = session.get('role')
+        conn = get_db()
+        with conn:
+            conn.execute(
+                '''INSERT INTO login_logs (user_id, username, email, role, action, status, timestamp, ip_address, user_agent, details)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                (user_id, username or 'System', email or '', role or '', action, status, now_str, ip, ua, details)
+            )
+    except Exception as e:
+        print(f"[*] Activity log error: {e}")
+
 # ── Auth Routes ──────────────────────────────────────────
 @app.route('/api/auth/signup', methods=['POST'])
 def signup():
@@ -442,7 +465,6 @@ def list_users():
            FROM users ORDER BY id ASC'''
     ).fetchall()
     return jsonify({"users": [dict(r) for r in rows]})
-
 @app.route('/api/admin/login-logs')
 def list_login_logs():
     limit = int(request.args.get('limit', 100))
@@ -454,370 +476,689 @@ def list_login_logs():
     ).fetchall()
     return jsonify({"logs": [dict(r) for r in rows]})
 
-# ── Interactive Database Viewer (Web UI) ─────────────────
+# ── Interactive Database Viewer (Web UI - Dark Theme) ─────
 @app.route('/db-viewer')
 def db_viewer():
     conn = get_db()
     users = conn.execute("SELECT id, username, email, role, company, signup_time, last_login_time, login_count FROM users ORDER BY id ASC").fetchall()
-    logs = conn.execute("SELECT id, username, email, role, action, status, timestamp, ip_address, details FROM login_logs ORDER BY id DESC LIMIT 50").fetchall()
-    hazards = conn.execute("SELECT ticket, location, category, urgency, status, reporter_name, date FROM hazards ORDER BY id DESC LIMIT 20").fetchall()
-    inspections = conn.execute("SELECT id, title, location, inspector, date, time, status FROM inspections ORDER BY id DESC LIMIT 20").fetchall()
+    logs = conn.execute("SELECT id, user_id, username, email, role, action, status, timestamp, ip_address, details FROM login_logs ORDER BY id DESC LIMIT 150").fetchall()
+    hazards = conn.execute("SELECT ticket, location, category, urgency, status, reporter_name, date, time, cause FROM hazards ORDER BY id DESC").fetchall()
+    inspections = conn.execute("SELECT id, title, location, inspector, date, time, status FROM inspections ORDER BY id DESC").fetchall()
+    contacts = conn.execute("SELECT id, name, position, phone, email, department, status FROM contacts ORDER BY id DESC").fetchall()
     
-    html = '''
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>SiteSafety Tracker — SQLite Database Viewer</title>
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-        <style>
-            :root {
-                --bg: #0f172a;
-                --surface: #1e293b;
-                --surface-card: #182234;
-                --border: #334155;
-                --text: #f8fafc;
-                --text-muted: #94a3b8;
-                --primary: #38bdf8;
-                --accent: #f59e0b;
-                --success: #10b981;
-                --danger: #ef4444;
-            }
-            * { box-sizing: border-box; margin: 0; padding: 0; }
-            body {
-                font-family: 'Poppins', sans-serif;
-                background: var(--bg);
-                color: var(--text);
-                padding: 30px 20px;
-                min-height: 100vh;
-            }
-            .container { max-width: 1200px; margin: 0 auto; }
-            header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                flex-wrap: wrap;
-                gap: 15px;
-                margin-bottom: 25px;
-                padding-bottom: 20px;
-                border-bottom: 1px solid var(--border);
-            }
-            h1 { font-size: 24px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 10px; }
-            .badge { background: #0284c7; color: #fff; font-size: 11px; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; font-weight: 600; }
-            .meta-text { color: var(--text-muted); font-size: 13px; font-family: 'JetBrains Mono', monospace; }
-            
-            .nav-tabs {
-                display: flex;
-                gap: 8px;
-                margin-bottom: 20px;
-                flex-wrap: wrap;
-            }
-            .tab-btn {
-                background: var(--surface);
-                color: var(--text-muted);
-                border: 1px solid var(--border);
-                padding: 8px 18px;
-                border-radius: 8px;
-                font-family: inherit;
-                font-size: 13px;
-                font-weight: 500;
-                cursor: pointer;
-                transition: all 0.2s ease;
-            }
-            .tab-btn:hover { background: #283548; color: #fff; }
-            .tab-btn.active {
-                background: var(--primary);
-                color: #0f172a;
-                font-weight: 600;
-                border-color: var(--primary);
-            }
+    total_users = len(users)
+    manager_count = sum(1 for u in users if u['role'] == 'manager')
+    staff_count = sum(1 for u in users if u['role'] == 'staff')
+    pending_hazards = sum(1 for h in hazards if h['status'] == 'Pending')
+    resolved_hazards = sum(1 for h in hazards if h['status'] == 'Resolved')
+    total_inspections = len(inspections)
+    total_logs = conn.execute("SELECT COUNT(*) as c FROM login_logs").fetchone()['c']
+    total_contacts = len(contacts)
+    
+    html = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SiteSafety Tracker — Central Database Hub</title>
+    <link rel="icon" href="logo.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {{
+            --bg-deep: #081733;
+            --bg-card: #0c2448;
+            --bg-card-alt: #0e2a56;
+            --bg-surface: #0b1c3d;
+            --border: rgba(140, 189, 246, 0.18);
+            --border-glow: rgba(56, 189, 248, 0.35);
+            --text-main: #f0f6fc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --primary: #38bdf8;
+            --primary-dark: #0284c7;
+            --gold: #f59e0b;
+            --emerald: #10b981;
+            --rose: #f43f5e;
+            --purple: #a855f7;
+            --teal: #14b8a6;
+        }}
+        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+        body {{
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 24px 20px 60px;
+            line-height: 1.5;
+            background-image: radial-gradient(circle at 15% 15%, rgba(14, 38, 86, 0.7) 0%, transparent 60%),
+                              radial-gradient(circle at 85% 85%, rgba(11, 28, 61, 0.7) 0%, transparent 60%);
+        }}
+        .container {{ max-width: 1320px; margin: 0 auto; }}
 
-            .card {
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: 12px;
-                overflow: hidden;
-                box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
-                margin-bottom: 30px;
-            }
-            .card-header {
-                padding: 16px 20px;
-                background: var(--surface-card);
-                border-bottom: 1px solid var(--border);
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-            .card-title { font-size: 16px; font-weight: 600; }
-            .count-pill { background: rgba(56,189,248,0.15); color: var(--primary); font-size: 12px; padding: 2px 10px; border-radius: 999px; font-weight: 600; }
-            
-            .table-wrap { overflow-x: auto; }
-            table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
-            th {
-                background: #151f30;
-                padding: 12px 16px;
-                color: var(--text-muted);
-                font-weight: 600;
-                text-transform: uppercase;
-                font-size: 11px;
-                letter-spacing: 0.5px;
-                border-bottom: 1px solid var(--border);
-            }
-            td {
-                padding: 12px 16px;
-                border-bottom: 1px solid #243144;
-                color: #e2e8f0;
-            }
-            tr:hover td { background: rgba(255,255,255,0.02); }
-            
-            .role-pill {
-                display: inline-block;
-                padding: 2px 8px;
-                border-radius: 6px;
-                font-size: 11px;
-                font-weight: 600;
-                text-transform: uppercase;
-            }
-            .role-manager { background: rgba(245,158,11,0.2); color: #f59e0b; border: 1px solid rgba(245,158,11,0.4); }
-            .role-staff { background: rgba(56,189,248,0.2); color: #38bdf8; border: 1px solid rgba(56,189,248,0.4); }
-            
-            .status-tag {
-                display: inline-block;
-                padding: 2px 8px;
-                border-radius: 6px;
-                font-size: 11px;
-                font-weight: 600;
-            }
-            .status-success { background: rgba(16,185,129,0.2); color: #10b981; }
-            .status-failed { background: rgba(239,68,68,0.2); color: #ef4444; }
-            
-            .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
-            .action-links { display: flex; gap: 10px; }
-            .btn-action {
-                text-decoration: none;
-                background: var(--surface);
-                color: var(--text);
-                border: 1px solid var(--border);
-                padding: 6px 14px;
-                border-radius: 6px;
-                font-size: 12px;
-                font-weight: 500;
-                display: inline-flex;
-                align-items: center;
-                gap: 5px;
-                transition: 0.2s;
-            }
-            .btn-action:hover { background: #334155; color: #fff; }
-            .tab-content { display: none; }
-            .tab-content.active { display: block; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <header>
-                <div>
-                    <h1>SiteSafety Tracker <span class="badge">SQLite Database</span></h1>
-                    <p class="meta-text" style="margin-top: 5px;">File: server/sitesafety.db • Port 8000 Active</p>
-                </div>
-                <div class="action-links">
-                    <a href="/login.html" class="btn-action">← Go to Login Page</a>
-                    <a href="/index.html" class="btn-action">🏠 Home</a>
-                    <button onclick="location.reload()" class="btn-action">🔄 Refresh Data</button>
-                </div>
-            </header>
+        /* Top Bar Header matching website */
+        header.db-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 18px;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #0b1f44 0%, #0c2652 100%);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.45);
+            margin-bottom: 24px;
+        }}
+        .header-brand {{ display: flex; align-items: center; gap: 16px; }}
+        .header-icon-circle {{
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #1d4ed8, #0284c7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+        }}
+        .header-icon-circle svg {{ width: 26px; height: 26px; stroke: #fff; fill: none; }}
+        .header-titles {{ display: flex; flex-direction: column; }}
+        .header-title-main {{ font-size: 17px; font-weight: 700; letter-spacing: 0.6px; color: #ffffff; text-transform: uppercase; }}
+        .header-title-sub {{ font-size: 12px; font-weight: 600; color: #8cbdf6; letter-spacing: 1px; text-transform: uppercase; }}
+        .header-title-desc {{ font-size: 11px; font-weight: 500; color: var(--gold); letter-spacing: 0.8px; margin-top: 1px; }}
 
-            <div class="nav-tabs">
-                <button class="tab-btn active" onclick="switchTab('tab-users')">👥 Users & Logins (''' + str(len(users)) + ''')</button>
-                <button class="tab-btn" onclick="switchTab('tab-logs')">📜 Login Audit Logs (''' + str(len(logs)) + ''')</button>
-                <button class="tab-btn" onclick="switchTab('tab-hazards')">⚠️ Hazards (''' + str(len(hazards)) + ''')</button>
-                <button class="tab-btn" onclick="switchTab('tab-inspections')">📋 Inspections (''' + str(len(inspections)) + ''')</button>
+        .header-actions {{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }}
+        .db-status-pill {{
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 14px;
+            background: rgba(16, 185, 129, 0.14);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #34d399;
+        }}
+        .pulse-dot {{
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 8px #10b981;
+            animation: pulseAnim 2s infinite ease-in-out;
+        }}
+        @keyframes pulseAnim {{
+            0%, 100% {{ transform: scale(1); opacity: 1; }}
+            50% {{ transform: scale(1.3); opacity: 0.6; }}
+        }}
+        .btn-top {{
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }}
+        .btn-portal {{ background: rgba(56, 189, 248, 0.12); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); }}
+        .btn-portal:hover {{ background: rgba(56, 189, 248, 0.22); color: #fff; transform: translateY(-1px); }}
+        .btn-refresh {{ background: #1d4ed8; color: #fff; }}
+        .btn-refresh:hover {{ background: #2563eb; transform: translateY(-1px); }}
+        .btn-export {{ background: #059669; color: #fff; }}
+        .btn-export:hover {{ background: #10b981; transform: translateY(-1px); }}
+
+        /* KPI Metric Cards */
+        .kpi-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }}
+        .kpi-card {{
+            background: linear-gradient(135deg, #0c2246 0%, #0a1b38 100%);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 18px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.35);
+            transition: transform 0.2s, border-color 0.2s;
+        }}
+        .kpi-card:hover {{ transform: translateY(-2px); border-color: var(--border-glow); }}
+        .kpi-card::before {{
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+        }}
+        .kpi-users::before {{ background: linear-gradient(90deg, #38bdf8, #2563eb); }}
+        .kpi-pending::before {{ background: linear-gradient(90deg, #f59e0b, #fbbf24); }}
+        .kpi-resolved::before {{ background: linear-gradient(90deg, #10b981, #34d399); }}
+        .kpi-inspections::before {{ background: linear-gradient(90deg, #818cf8, #a855f7); }}
+        .kpi-audit::before {{ background: linear-gradient(90deg, #ec4899, #f43f5e); }}
+        .kpi-contacts::before {{ background: linear-gradient(90deg, #14b8a6, #06b6d4); }}
+
+        .kpi-label {{ font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; display: flex; justify-content: space-between; }}
+        .kpi-value {{ font-size: 26px; font-weight: 700; color: #fff; font-family: 'JetBrains Mono', monospace; }}
+        .kpi-sub {{ font-size: 11px; color: var(--text-dim); margin-top: 4px; }}
+
+        /* Live Table Search Bar */
+        .search-container {{
+            background: linear-gradient(135deg, #0b1f44 0%, #0c2652 100%);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+        }}
+        .search-icon {{ stroke: #8cbdf6; width: 20px; height: 20px; flex-shrink: 0; }}
+        .search-input {{
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 14px;
+            font-family: inherit;
+        }}
+        .search-input::placeholder {{ color: #64748b; }}
+        .search-tip {{ font-size: 11px; color: var(--text-dim); font-family: 'JetBrains Mono', monospace; }}
+
+        /* Tab Navigation */
+        .tabs-nav {{
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }}
+        .tab-btn {{
+            background: #0b1d3d;
+            color: #94a3b8;
+            border: 1px solid var(--border);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }}
+        .tab-btn:hover {{ background: #0f2752; color: #fff; border-color: rgba(140, 189, 246, 0.4); }}
+        .tab-btn.active {{
+            background: linear-gradient(135deg, #1d4ed8 0%, #0284c7 100%);
+            color: #ffffff;
+            border-color: #38bdf8;
+            box-shadow: 0 4px 16px rgba(2, 132, 199, 0.35);
+        }}
+        .tab-count {{
+            background: rgba(0, 0, 0, 0.3);
+            font-size: 11px;
+            padding: 2px 7px;
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace;
+        }}
+
+        /* Table Card Container */
+        .card-table {{
+            background: linear-gradient(135deg, #0c2448 0%, #0a1b38 100%);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.5);
+            margin-bottom: 30px;
+        }}
+        .card-table-header {{
+            padding: 16px 24px;
+            background: #07152b;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }}
+        .table-title {{ font-size: 15px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 10px; }}
+        .table-wrap {{ overflow-x: auto; }}
+        table {{ width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }}
+        th {{
+            background: #061124;
+            padding: 13px 18px;
+            color: #8cbdf6;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.6px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }}
+        td {{
+            padding: 12px 18px;
+            border-bottom: 1px solid rgba(140, 189, 246, 0.1);
+            color: #e2e8f0;
+        }}
+        tr:nth-child(even) td {{ background: rgba(14, 38, 86, 0.35); }}
+        tr:hover td {{ background: rgba(56, 189, 248, 0.08); }}
+
+        /* Badges & Pills */
+        .mono {{ font-family: 'JetBrains Mono', monospace; font-size: 12px; }}
+        .badge {{
+            display: inline-block;
+            padding: 3px 9px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            white-space: nowrap;
+        }}
+        .badge-manager {{ background: rgba(245, 158, 11, 0.16); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }}
+        .badge-staff {{ background: rgba(56, 189, 248, 0.16); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); }}
+        .badge-pending {{ background: rgba(245, 158, 11, 0.16); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }}
+        .badge-resolved {{ background: rgba(16, 185, 129, 0.16); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }}
+        .badge-scheduled {{ background: rgba(56, 189, 248, 0.16); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); }}
+
+        .urgency-high {{ color: #f43f5e; font-weight: 600; }}
+        .urgency-medium {{ color: #fbbf24; font-weight: 600; }}
+        .urgency-low {{ color: #34d399; font-weight: 600; }}
+
+        /* Action Badges in Audit Trail */
+        .action-tag {{
+            display: inline-block;
+            padding: 3px 9px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.3px;
+        }}
+        .action-report {{ background: rgba(245, 158, 11, 0.18); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }}
+        .action-resolve {{ background: rgba(16, 185, 129, 0.18); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }}
+        .action-inspection {{ background: rgba(168, 85, 247, 0.18); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.35); }}
+        .action-cancel {{ background: rgba(244, 63, 94, 0.18); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.35); }}
+        .action-contact {{ background: rgba(20, 184, 166, 0.18); color: #2dd4bf; border: 1px solid rgba(20, 184, 166, 0.35); }}
+        .action-login {{ background: rgba(56, 189, 248, 0.18); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); }}
+        .action-logout {{ background: rgba(148, 163, 184, 0.18); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.35); }}
+        .action-signup {{ background: rgba(99, 102, 241, 0.18); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.35); }}
+        .action-default {{ background: rgba(148, 163, 184, 0.15); color: #cbd5e1; }}
+
+        .tab-panel {{ display: none; }}
+        .tab-panel.active {{ display: block; }}
+        .empty-cell {{ color: #64748b; font-style: italic; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Brand Header matching website -->
+        <header class="db-header">
+            <div class="header-brand">
+                <div class="header-icon-circle">
+                    <svg viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                    </svg>
+                </div>
+                <div class="header-titles">
+                    <div class="header-title-main">INCIDENT AND INSPECTION MANAGEMENT SYSTEM</div>
+                    <div class="header-title-sub">CENTRAL SQLITE DATABASE HUB</div>
+                    <div class="header-title-desc">STRICT AUDIT TRAIL • DARK THEME EDITION</div>
+                </div>
             </div>
+            <div class="header-actions">
+                <div class="db-status-pill">
+                    <span class="pulse-dot"></span>
+                    <span>Database Live: sitesafety.db</span>
+                </div>
+                <a href="/manager-home.html" class="btn-top btn-portal">← Manager Portal</a>
+                <a href="/home.html" class="btn-top btn-portal">Staff Portal</a>
+                <button type="button" onclick="location.reload()" class="btn-top btn-refresh">🔄 Refresh</button>
+                <a href="/api/hazards/export/csv" class="btn-top btn-export">⬇️ Export CSV</a>
+            </div>
+        </header>
 
-            <!-- TAB 1: USERS -->
-            <div id="tab-users" class="tab-content active">
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">Registered Users</span>
-                        <span class="count-pill">''' + str(len(users)) + ''' Users</span>
-                    </div>
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Username</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Company</th>
-                                    <th>Time of Sign Up</th>
-                                    <th>Time of Last Login</th>
-                                    <th>Login Count</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-    '''
+        <!-- KPI Metric Cards Row -->
+        <section class="kpi-grid">
+            <div class="kpi-card kpi-users">
+                <div class="kpi-label"><span>Total Users</span><span>👥</span></div>
+                <div class="kpi-value">{total_users}</div>
+                <div class="kpi-sub">{manager_count} Admins • {staff_count} Staff</div>
+            </div>
+            <div class="kpi-card kpi-pending">
+                <div class="kpi-label"><span>Pending Hazards</span><span>⚠️</span></div>
+                <div class="kpi-value">{pending_hazards}</div>
+                <div class="kpi-sub">Active open safety issues</div>
+            </div>
+            <div class="kpi-card kpi-resolved">
+                <div class="kpi-label"><span>Resolved Hazards</span><span>✅</span></div>
+                <div class="kpi-value">{resolved_hazards}</div>
+                <div class="kpi-sub">Archived resolution logs</div>
+            </div>
+            <div class="kpi-card kpi-inspections">
+                <div class="kpi-label"><span>Scheduled Inspections</span><span>📋</span></div>
+                <div class="kpi-value">{total_inspections}</div>
+                <div class="kpi-sub">Zone checks & timetable</div>
+            </div>
+            <div class="kpi-card kpi-audit">
+                <div class="kpi-label"><span>Audit Trail Records</span><span>📜</span></div>
+                <div class="kpi-value">{total_logs}</div>
+                <div class="kpi-sub">Strictly logged activities</div>
+            </div>
+            <div class="kpi-card kpi-contacts">
+                <div class="kpi-label"><span>Directory Contacts</span><span>📇</span></div>
+                <div class="kpi-value">{total_contacts}</div>
+                <div class="kpi-sub">Safety & Emergency team</div>
+            </div>
+        </section>
+
+        <!-- Live Instant Search Bar -->
+        <div class="search-container">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="db-search-input" class="search-input" placeholder="Type to filter active table records in real-time (e.g. ticket number, username, location, action)...">
+            <span class="search-tip">INSTANT FILTER</span>
+        </div>
+
+        <!-- Tab Navigation Bar -->
+        <nav class="tabs-nav">
+            <button class="tab-btn active" onclick="switchTab('tab-users', this)">
+                👥 Users &amp; Accounts <span class="tab-count">{total_users}</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('tab-logs', this)">
+                📜 Activity &amp; Audit Trail <span class="tab-count">{total_logs}</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('tab-hazards', this)">
+                ⚠️ Hazard Reports <span class="tab-count">{len(hazards)}</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('tab-inspections', this)">
+                📋 Scheduled Inspections <span class="tab-count">{total_inspections}</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('tab-contacts', this)">
+                📇 Directory Contacts <span class="tab-count">{total_contacts}</span>
+            </button>
+        </nav>
+
+        <!-- TAB 1: USERS -->
+        <div id="tab-users" class="tab-panel active">
+            <div class="card-table">
+                <div class="card-table-header">
+                    <div class="table-title">👥 Registered User Accounts ({total_users})</div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Company</th>
+                                <th>Sign Up Time</th>
+                                <th>Last Login</th>
+                                <th>Logins</th>
+                            </tr>
+                        </thead>
+                        <tbody>'''
+    
     for u in users:
-        role_cls = 'role-manager' if u['role'] == 'manager' else 'role-staff'
-        last_log = u['last_login_time'] or '<span style="color:#64748b;">Never</span>'
+        role_badge = 'badge-manager' if u['role'] == 'manager' else 'badge-staff'
+        last_log = u['last_login_time'] or '<span class="empty-cell">Never</span>'
         html += f'''
-                                <tr>
-                                    <td class="mono">{u['id']}</td>
-                                    <td><strong>{u['username']}</strong></td>
-                                    <td class="mono">{u['email']}</td>
-                                    <td><span class="role-pill {role_cls}">{u['role']}</span></td>
-                                    <td>{u['company']}</td>
-                                    <td class="mono">{u['signup_time']}</td>
-                                    <td class="mono">{last_log}</td>
-                                    <td><strong>{u['login_count']}</strong></td>
-                                </tr>
-        '''
-    html += '''
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 2: AUDIT LOGS -->
-            <div id="tab-logs" class="tab-content">
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">Login & Activity Audit Trail</span>
-                        <span class="count-pill">Last 50 Logs</span>
-                    </div>
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Log ID</th>
-                                    <th>Action</th>
-                                    <th>Status</th>
-                                    <th>Username</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Timestamp</th>
-                                    <th>Details</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-    '''
-    for log in logs:
-        st_cls = 'status-success' if log['status'] == 'SUCCESS' else 'status-failed'
-        html += f'''
-                                <tr>
-                                    <td class="mono">{log['id']}</td>
-                                    <td><strong>{log['action']}</strong></td>
-                                    <td><span class="status-tag {st_cls}">{log['status']}</span></td>
-                                    <td>{log['username']}</td>
-                                    <td class="mono">{log['email']}</td>
-                                    <td>{log['role']}</td>
-                                    <td class="mono">{log['timestamp']}</td>
-                                    <td style="color:#cbd5e1;">{log['details']}</td>
-                                </tr>
-        '''
-    html += '''
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 3: HAZARDS -->
-            <div id="tab-hazards" class="tab-content">
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">Recent Hazards</span>
-                        <span class="count-pill">''' + str(len(hazards)) + ''' Records</span>
-                    </div>
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Ticket #</th>
-                                    <th>Category</th>
-                                    <th>Location</th>
-                                    <th>Urgency</th>
-                                    <th>Status</th>
-                                    <th>Reporter</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-    '''
-    for h in hazards:
-        html += f'''
-                                <tr>
-                                    <td class="mono"><strong>{h['ticket']}</strong></td>
-                                    <td>{h['category']}</td>
-                                    <td>{h['location']}</td>
-                                    <td>{h['urgency']}</td>
-                                    <td>{h['status']}</td>
-                                    <td>{h['reporter_name']}</td>
-                                    <td class="mono">{h['date']}</td>
-                                </tr>
-        '''
-    html += '''
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 4: INSPECTIONS -->
-            <div id="tab-inspections" class="tab-content">
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-title">Scheduled Inspections</span>
-                        <span class="count-pill">''' + str(len(inspections)) + ''' Records</span>
-                    </div>
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Title</th>
-                                    <th>Location</th>
-                                    <th>Inspector</th>
-                                    <th>Date</th>
-                                    <th>Time</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-    '''
-    for i in inspections:
-        html += f'''
-                                <tr>
-                                    <td class="mono">{i['id']}</td>
-                                    <td><strong>{i['title']}</strong></td>
-                                    <td>{i['location']}</td>
-                                    <td>{i['inspector']}</td>
-                                    <td class="mono">{i['date']}</td>
-                                    <td class="mono">{i['time']}</td>
-                                    <td>{i['status']}</td>
-                                </tr>
-        '''
-    html += '''
-                            </tbody>
-                        </table>
-                    </div>
+                            <tr>
+                                <td class="mono">#{u['id']}</td>
+                                <td><strong>{u['username']}</strong></td>
+                                <td class="mono">{u['email']}</td>
+                                <td><span class="badge {role_badge}">{u['role']}</span></td>
+                                <td>{u['company'] or '<span class="empty-cell">N/A</span>'}</td>
+                                <td class="mono">{u['signup_time']}</td>
+                                <td class="mono">{last_log}</td>
+                                <td class="mono"><strong>{u['login_count']}</strong></td>
+                            </tr>'''
+    
+    html += f'''
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <script>
-            function switchTab(tabId) {
-                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-                
-                event.currentTarget.classList.add('active');
-                document.getElementById(tabId).classList.add('active');
-            }
-        </script>
-    </body>
-    </html>
-    '''
+        <!-- TAB 2: AUDIT TRAIL (ALL STRICTLY RECORDED ACTIVITIES) -->
+        <div id="tab-logs" class="tab-panel">
+            <div class="card-table">
+                <div class="card-table-header">
+                    <div class="table-title">📜 Strict Activity &amp; Audit Trail (Last {len(logs)} Events of {total_logs})</div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Log ID</th>
+                                <th>Action Performed</th>
+                                <th>Status</th>
+                                <th>Username / Account</th>
+                                <th>Role</th>
+                                <th>Timestamp</th>
+                                <th>IP Address</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>'''
+    
+    for l in logs:
+        action = l['action']
+        if 'REPORT' in action or 'HAZARD' in action and 'RESOLVE' not in action:
+            act_cls = 'action-report'
+        elif 'RESOLVE' in action:
+            act_cls = 'action-resolve'
+        elif 'INSPECTION' in action and 'CANCEL' not in action:
+            act_cls = 'action-inspection'
+        elif 'CANCEL' in action or 'DELETE' in action:
+            act_cls = 'action-cancel'
+        elif 'CONTACT' in action:
+            act_cls = 'action-contact'
+        elif 'LOGIN' in action:
+            act_cls = 'action-login'
+        elif 'LOGOUT' in action:
+            act_cls = 'action-logout'
+        elif 'SIGNUP' in action:
+            act_cls = 'action-signup'
+        else:
+            act_cls = 'action-default'
+            
+        status_color = '#34d399' if l['status'] == 'SUCCESS' else '#f43f5e'
+        role_label = l['role'] or 'system'
+        
+        html += f'''
+                            <tr>
+                                <td class="mono">#{l['id']}</td>
+                                <td><span class="action-tag {act_cls}">{l['action']}</span></td>
+                                <td style="color:{status_color}; font-weight:700; font-size:11px;">{l['status']}</td>
+                                <td><strong>{l['username'] or l['email'] or 'System'}</strong></td>
+                                <td><span class="badge {'badge-manager' if role_label=='manager' else 'badge-staff'}">{role_label}</span></td>
+                                <td class="mono">{l['timestamp']}</td>
+                                <td class="mono">{l['ip_address'] or '<span class="empty-cell">local</span>'}</td>
+                                <td>{l['details']}</td>
+                            </tr>'''
+
+    html += f'''
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: HAZARDS (PENDING & RESOLVED) -->
+        <div id="tab-hazards" class="tab-panel">
+            <div class="card-table">
+                <div class="card-table-header">
+                    <div class="table-title">⚠️ Safety Hazard Records ({len(hazards)})</div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ticket</th>
+                                <th>Location</th>
+                                <th>Category</th>
+                                <th>Urgency</th>
+                                <th>Status</th>
+                                <th>Reporter / Officer</th>
+                                <th>Date &amp; Time</th>
+                                <th>Cause / Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>'''
+    
+    for h in hazards:
+        status_cls = 'badge-resolved' if h['status'] == 'Resolved' else 'badge-pending'
+        urg = (h['urgency'] or 'Medium').lower()
+        urg_cls = f'urgency-{urg}' if urg in ['high', 'medium', 'low'] else 'urgency-medium'
+        html += f'''
+                            <tr>
+                                <td class="mono"><strong>{h['ticket']}</strong></td>
+                                <td>{h['location']}</td>
+                                <td>{h['category']}</td>
+                                <td><span class="{urg_cls}">{h['urgency']}</span></td>
+                                <td><span class="badge {status_cls}">{h['status']}</span></td>
+                                <td>{h['reporter_name'] or '<span class="empty-cell">N/A</span>'}</td>
+                                <td class="mono">{h['date']} {h['time']}</td>
+                                <td>{h['cause'] or '<span class="empty-cell">No details provided</span>'}</td>
+                            </tr>'''
+
+    html += f'''
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: INSPECTIONS -->
+        <div id="tab-inspections" class="tab-panel">
+            <div class="card-table">
+                <div class="card-table-header">
+                    <div class="table-title">📋 Scheduled Site Inspections Timetable ({total_inspections})</div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Inspection ID</th>
+                                <th>Title / Inspection Name</th>
+                                <th>Location / Zone</th>
+                                <th>Lead Inspector</th>
+                                <th>Scheduled Date</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>'''
+    
+    for i in inspections:
+        html += f'''
+                            <tr>
+                                <td class="mono">#{i['id']}</td>
+                                <td><strong>{i['title']}</strong></td>
+                                <td>{i['location']}</td>
+                                <td>{i['inspector']}</td>
+                                <td class="mono">{i['date']}</td>
+                                <td class="mono">{i['time']}</td>
+                                <td><span class="badge badge-scheduled">{i['status']}</span></td>
+                            </tr>'''
+
+    html += f'''
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: CONTACTS -->
+        <div id="tab-contacts" class="tab-panel">
+            <div class="card-table">
+                <div class="card-table-header">
+                    <div class="table-title">📇 Emergency &amp; Safety Contact Directory ({total_contacts})</div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Contact ID</th>
+                                <th>Full Name</th>
+                                <th>Position / Role</th>
+                                <th>Department</th>
+                                <th>Phone Number</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>'''
+    
+    for c in contacts:
+        html += f'''
+                            <tr>
+                                <td class="mono">#{c['id']}</td>
+                                <td><strong>{c['name']}</strong></td>
+                                <td>{c['position']}</td>
+                                <td><span class="badge badge-staff">{c['department']}</span></td>
+                                <td class="mono">{c['phone']}</td>
+                                <td class="mono">{c['email'] or '<span class="empty-cell">N/A</span>'}</td>
+                                <td><span class="badge badge-resolved">{c['status']}</span></td>
+                            </tr>'''
+
+    html += '''
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+            
+            if (el) el.classList.add('active');
+            const target = document.getElementById(tabId);
+            if (target) target.classList.add('active');
+            
+            filterActiveTable();
+        }
+
+        const searchInput = document.getElementById('db-search-input');
+        function filterActiveTable() {
+            if (!searchInput) return;
+            const q = searchInput.value.toLowerCase().trim();
+            const activePanel = document.querySelector('.tab-panel.active');
+            if (!activePanel) return;
+
+            const rows = activePanel.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                if (!q) {
+                    row.style.display = '';
+                    return;
+                }
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(q) ? '' : 'none';
+            });
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', filterActiveTable);
+        }
+    </script>
+</body>
+</html>'''
     return render_template_string(html)
 
 # ── Hazard Routes ────────────────────────────────────────
@@ -914,26 +1255,48 @@ def create_hazard():
     
     conn = get_db()
     with conn:
-        count = conn.execute('SELECT COUNT(*) as c FROM hazards').fetchone()['c'] + 1
-        ticket = f"ABC-{yy}-{mm}{dd}-{count:02d}"
-        date_str = f"{mm}-{dd}-{yy[-2:]}"
-        time_str = now.strftime("%I:%M %p")
+        ticket = (data.get('ticket') or '').strip()
+        if not ticket:
+            count = conn.execute('SELECT COUNT(*) as c FROM hazards').fetchone()['c'] + 1
+            ticket = f"ABC-{yy}-{mm}{dd}-{count:02d}"
+            
+        date_str = data.get('date') or f"{mm}-{dd}-{yy[-2:]}"
+        time_str = data.get('time') or now.strftime("%I:%M %p")
+        status = data.get('status') or 'Pending'
+        category = data.get('category') or 'General Hazard'
+        location = data.get('location') or 'Unknown Location'
+        urgency = data.get('urgency') or 'Medium'
+        cause = data.get('cause') or ''
+        photo = data.get('photo') or ''
         
-        personnel = data.get('personnel', {})
+        personnel = data.get('personnel') or {}
+        rep_name = personnel.get('name') or ''
+        rep_pos = personnel.get('position') or ''
+        rep_phone = personnel.get('phone') or ''
+        rep_dept = personnel.get('dept') or ''
         
-        conn.execute('''
-            INSERT INTO hazards (ticket, location, category, date, time, urgency, status, cause, photo,
-            reporter_name, reporter_position, reporter_phone, reporter_dept)
-            VALUES (?, ?, ?, ?, ?, ?, 'Pending', ?, ?, ?, ?, ?, ?)
-        ''', (
-            ticket, data.get('location', 'Unknown Location'), data.get('category', 'General Hazard'),
-            date_str, time_str, data.get('urgency', 'Medium'), data.get('cause', ''), data.get('photo', ''),
-            personnel.get('name', ''), personnel.get('position', ''), personnel.get('phone', ''), personnel.get('dept', '')
-        ))
+        existing = conn.execute('SELECT id FROM hazards WHERE ticket = ?', (ticket,)).fetchone()
+        if existing:
+            conn.execute('''
+                UPDATE hazards SET location=?, category=?, date=?, time=?, urgency=?, status=?, cause=?, photo=?,
+                reporter_name=?, reporter_position=?, reporter_phone=?, reporter_dept=?
+                WHERE ticket = ?
+            ''', (location, category, date_str, time_str, urgency, status, cause, photo,
+                  rep_name, rep_pos, rep_phone, rep_dept, ticket))
+        else:
+            conn.execute('''
+                INSERT INTO hazards (ticket, location, category, date, time, urgency, status, cause, photo,
+                reporter_name, reporter_position, reporter_phone, reporter_dept)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                ticket, location, category, date_str, time_str, urgency, status, cause, photo,
+                rep_name, rep_pos, rep_phone, rep_dept
+            ))
         
         conn.execute('INSERT INTO notifications (title, time_label, unread) VALUES (?, ?, 1)', 
-                     (f"New Hazard Report: {ticket} - {data.get('category', '')}", "Just now"))
-                     
+                     (f"New Hazard Report: {ticket} - {category}", "Just now"))
+
+    log_activity('REPORT_HAZARD', 'SUCCESS', f"Hazard ticket {ticket} ({category}) filed at {location}")
     return jsonify({"message": "Hazard report created.", "ticket": ticket}), 201
 
 @app.route('/api/hazards/<ticket>/resolve', methods=['PATCH'])
@@ -949,7 +1312,8 @@ def resolve_hazard(ticket):
             
         conn.execute('INSERT INTO notifications (title, time_label, unread) VALUES (?, ?, 1)', 
                      (f"Hazard Ticket {ticket} Marked as Resolved", "Just now"))
-                     
+
+    log_activity('RESOLVE_HAZARD', 'SUCCESS', f"Hazard ticket {ticket} marked as RESOLVED")
     return jsonify({"message": "Hazard marked as resolved.", "ticket": ticket})
 
 @app.route('/api/hazards/export/csv')
@@ -1000,7 +1364,8 @@ def create_inspection():
         )
         conn.execute('INSERT INTO notifications (title, time_label, unread) VALUES (?, ?, 1)', 
                      (f"New Inspection Scheduled: {data.get('title')}", "Just now"))
-                     
+
+    log_activity('SCHEDULE_INSPECTION', 'SUCCESS', f"Inspection scheduled: {data.get('title')} at {data.get('location')} by {data.get('inspector')}")
     return jsonify({"message": "Inspection scheduled successfully.", "id": cursor.lastrowid}), 201
 
 @app.route('/api/inspections/<int:id>', methods=['DELETE'])
@@ -1010,8 +1375,54 @@ def delete_inspection(id):
         cursor = conn.execute('DELETE FROM inspections WHERE id = ?', (id,))
         if cursor.rowcount == 0:
             return jsonify({"error": "Inspection not found."}), 404
-            
+
+    log_activity('CANCEL_INSPECTION', 'SUCCESS', f"Inspection #{id} cancelled")
     return jsonify({"message": "Inspection cancelled."})
+
+# ── Contact Directory Routes ─────────────────────────────
+@app.route('/api/contacts', methods=['GET'])
+def list_contacts():
+    conn = get_db()
+    rows = conn.execute('SELECT * FROM contacts ORDER BY id DESC').fetchall()
+    return jsonify({"contacts": [dict(row) for row in rows]})
+
+@app.route('/api/contacts', methods=['POST'])
+def create_contact():
+    data = request.json or {}
+    name = (data.get('name') or '').strip()
+    position = (data.get('position') or '').strip()
+    phone = (data.get('phone') or '').strip()
+    email = (data.get('email') or '').strip()
+    dept = (data.get('dept') or data.get('department') or 'Security').strip()
+    
+    if not name or not phone:
+        return jsonify({"error": "Contact name and phone number are required."}), 400
+        
+    conn = get_db()
+    with conn:
+        cursor = conn.execute(
+            'INSERT INTO contacts (name, position, phone, email, department, status) VALUES (?, ?, ?, ?, ?, ?)',
+            (name, position or 'Team Member', phone, email, dept, 'Active')
+        )
+        new_id = cursor.lastrowid
+        
+    log_activity('ADD_CONTACT', 'SUCCESS', f"Contact '{name}' ({dept}) added to directory")
+    return jsonify({"message": "Contact added successfully.", "id": new_id}), 201
+
+@app.route('/api/contacts/<id>', methods=['DELETE'])
+def delete_contact(id):
+    clean_id = str(id).replace('contact-', '')
+    conn = get_db()
+    with conn:
+        if clean_id.isdigit():
+            cursor = conn.execute('DELETE FROM contacts WHERE id = ?', (int(clean_id),))
+        else:
+            cursor = conn.execute('DELETE FROM contacts WHERE name = ?', (id,))
+        if cursor.rowcount == 0:
+            return jsonify({"error": "Contact not found."}), 404
+
+    log_activity('DELETE_CONTACT', 'SUCCESS', f"Contact #{id} deleted from directory")
+    return jsonify({"message": "Contact deleted successfully."})
 
 # ── Notification Routes ──────────────────────────────────
 @app.route('/api/notifications')

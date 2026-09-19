@@ -84,8 +84,10 @@ def init_db():
             name        TEXT    NOT NULL,
             position    TEXT    NOT NULL,
             phone       TEXT    NOT NULL,
+            email       TEXT    DEFAULT '',
             department  TEXT    NOT NULL,
-            status      TEXT    NOT NULL DEFAULT 'Active'
+            status      TEXT    NOT NULL DEFAULT 'Active',
+            created_at  TEXT    NOT NULL DEFAULT (datetime('now', 'localtime'))
         );
 
         CREATE TABLE IF NOT EXISTS password_resets (
@@ -108,6 +110,13 @@ def init_db():
             conn.execute("ALTER TABLE users ADD COLUMN last_login_time TEXT DEFAULT NULL")
         if 'login_count' not in cols:
             conn.execute("ALTER TABLE users ADD COLUMN login_count INTEGER NOT NULL DEFAULT 0")
+
+        # Auto-migrate contacts table if missing email or created_at
+        contact_cols = [r['name'] for r in conn.execute("PRAGMA table_info(contacts)").fetchall()]
+        if 'email' not in contact_cols:
+            conn.execute("ALTER TABLE contacts ADD COLUMN email TEXT DEFAULT ''")
+        if 'created_at' not in contact_cols:
+            conn.execute("ALTER TABLE contacts ADD COLUMN created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))")
 
     conn.close()
 

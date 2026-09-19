@@ -160,6 +160,21 @@ const API = (() => {
     }
   };
 
+  // ── Contacts ──────────────────────────────────────────
+  const contacts = {
+    async list() {
+      return request('/contacts');
+    },
+
+    async create(data) {
+      return request('/contacts', { method: 'POST', body: data });
+    },
+
+    async delete(id) {
+      return request(`/contacts/${id}`, { method: 'DELETE' });
+    }
+  };
+
   return {
     BASE,
     isOnline: () => _isOnline,
@@ -167,7 +182,8 @@ const API = (() => {
     admin,
     hazards,
     inspections,
-    notifications
+    notifications,
+    contacts
   };
 })();
 
