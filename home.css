@@ -3004,28 +3004,30 @@ input:checked + .slider:before {
   box-shadow: 0 4px 12px rgba(13, 79, 174, 0.35);
 }
 
+.hazard-info-box.status-resolved-box,
 .status-badge-resolved {
-  display: inline-flex !important;
+  background-color: #d1fae5 !important;
+  border: 2px solid #059669 !important;
+  color: #065f46 !important;
+  display: flex !important;
   align-items: center !important;
+  justify-content: center !important;
   gap: 8px !important;
-  font-weight: 600 !important;
-  color: #047857 !important;
-  background: #ecfdf5 !important;
-  border: 1.5px solid #a7f3d0 !important;
-  border-radius: 8px !important;
-  padding: 8px 16px !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
 }
 
+.hazard-info-box.status-pending-box,
 .status-badge-pending {
-  display: inline-flex !important;
+  background-color: #fef3c7 !important;
+  border: 2px solid #d97706 !important;
+  color: #92400e !important;
+  display: flex !important;
   align-items: center !important;
+  justify-content: center !important;
   gap: 8px !important;
-  font-weight: 600 !important;
-  color: #b45309 !important;
-  background: #fef3c7 !important;
-  border: 1.5px solid #fde68a !important;
-  border-radius: 8px !important;
-  padding: 8px 16px !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
 }
 
 @media (max-width: 600px) {

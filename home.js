@@ -1776,41 +1776,75 @@ document.addEventListener('DOMContentLoaded', () => {
     const detailStatusRow = document.getElementById('detail-status-row');
     const detailStatusText = document.getElementById('detail-status-text');
     const detailStatusBadge = document.getElementById('detail-status-badge');
+    const btnHazardBack = document.getElementById('btn-hazard-back');
 
     if (detailStatusRow && detailStatusText && detailStatusBadge) {
       detailStatusRow.style.display = 'flex';
       if (isResolved) {
-        detailStatusBadge.className = 'hazard-info-box status-badge-resolved';
+        detailStatusBadge.className = 'hazard-info-box status-resolved-box';
         detailStatusText.textContent = item.resolvedDate ? `Resolved on ${item.resolvedDate}` : 'Resolved';
+        const iconSvg = detailStatusBadge.querySelector('svg');
+        if (iconSvg) {
+          iconSvg.innerHTML = '<polyline points="20 6 9 17 4 12"></polyline>';
+          iconSvg.setAttribute('stroke', '#059669');
+        }
       } else {
-        detailStatusBadge.className = 'hazard-info-box status-badge-pending';
+        detailStatusBadge.className = 'hazard-info-box status-pending-box';
         detailStatusText.textContent = 'Pending Investigation';
+        const iconSvg = detailStatusBadge.querySelector('svg');
+        if (iconSvg) {
+          iconSvg.innerHTML = '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>';
+          iconSvg.setAttribute('stroke', '#d97706');
+        }
       }
     }
 
-    // Hide or Show "Resolved" Action Button
+    // Dynamic banner & navigation synchronization (for manager-hazard-detail.html)
+    const bannerTitle = document.querySelector('.banner-text h1');
+    const bannerDesc = document.querySelector('.banner-text p');
+    const navPending = document.getElementById('nav-pending-hazard');
+    const navResolved = document.getElementById('nav-resolved-hazard');
+    const bannerIcon = document.querySelector('.hazard-triangle-art');
+
+    if (bannerTitle && bannerDesc) {
+      if (isResolved) {
+        bannerTitle.textContent = 'Resolved Hazard';
+        bannerDesc.textContent = 'Archived Incident Record';
+        if (navPending) navPending.classList.remove('active');
+        if (navResolved) navResolved.classList.add('active');
+        if (bannerIcon) {
+          bannerIcon.innerHTML = `
+            <svg viewBox="0 0 54 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="27" cy="24" r="21" fill="#10B981" stroke="#065F46" stroke-width="3"/>
+              <polyline points="18 24 24 30 36 18" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          `;
+          bannerIcon.title = 'Resolved Incident Record';
+        }
+      } else {
+        bannerTitle.textContent = 'Pending Hazard';
+        bannerDesc.textContent = 'Needs review or resolution';
+        if (navPending) navPending.classList.add('active');
+        if (navResolved) navResolved.classList.remove('active');
+      }
+    }
+
+    // Action Buttons: Hide resolve button for resolved records; toggle smart back button
     if (btnHazardResolved) {
-      // If already resolved, hide the button completely
       btnHazardResolved.style.display = isResolved ? 'none' : 'inline-flex';
     }
 
-    // Adapt the secondary button into a clear Back button when viewed as Resolved
     if (btnHazardCancel) {
-      if (isResolved) {
-        btnHazardCancel.className = 'btn-hazard-back';
-        btnHazardCancel.innerHTML = `
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
-          </svg>
-          <span>Back to Resolved Reports</span>
-        `;
-        btnHazardCancel.setAttribute('data-target', 'manager-resolved.html');
-      } else {
-        btnHazardCancel.className = 'btn-hazard-cancel';
-        btnHazardCancel.innerHTML = 'Cancel';
-        btnHazardCancel.setAttribute('data-target', 'manager-home.html');
-      }
+      btnHazardCancel.style.display = isResolved ? 'none' : 'inline-flex';
+      btnHazardCancel.textContent = 'Cancel';
+    }
+
+    if (btnHazardBack) {
+      btnHazardBack.style.display = isResolved ? 'inline-flex' : 'none';
+      btnHazardBack.onclick = (e) => {
+        e.preventDefault();
+        window.location.href = 'manager-resolved.html';
+      };
     }
 
     if (managerListView && managerDetailView) {
@@ -1832,7 +1866,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnHazardCancel.addEventListener('click', (e) => {
       e.preventDefault();
       if (window.location.pathname.includes('manager-hazard-detail.html')) {
-        const target = btnHazardCancel.getAttribute('data-target') || 'manager-resolved.html';
+        const target = btnHazardCancel.getAttribute('data-target') || 'manager-home.html';
         window.location.href = target;
       } else {
         closeHazardDetail();

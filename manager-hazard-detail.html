@@ -203,11 +203,15 @@
                         </div>
 
                         <!-- Status Badge -->
-                        <div class="hazard-info-row" id="detail-status-row" style="display: none;">
+                        <div class="hazard-info-row" id="detail-status-row">
                             <span class="hazard-info-label">Status:</span>
-                            <div class="hazard-info-box" id="detail-status-badge">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                                <span id="detail-status-text">Resolved</span>
+                            <div class="hazard-info-box status-pending-box" id="detail-status-badge">
+                                <svg id="detail-status-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                                <span id="detail-status-text">Pending Investigation</span>
                             </div>
                         </div>
                     </div>
@@ -216,6 +220,13 @@
                     <div class="manager-actions-row">
                         <button type="button" class="btn-hazard-resolved" id="btn-hazard-resolved">Mark as Resolved</button>
                         <button type="button" class="btn-hazard-cancel" id="btn-hazard-cancel">Cancel</button>
+                        <button type="button" class="btn-hazard-back" id="btn-hazard-back" style="display: none;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="19" y1="12" x2="5" y2="12"></line>
+                                <polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
+                            <span>Back to Resolved Reports</span>
+                        </button>
                     </div>
                 </div>
             </div>
