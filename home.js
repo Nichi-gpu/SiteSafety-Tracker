@@ -63,39 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
     nameEls.forEach(el => {
       if (el) el.textContent = username;
     });
-
-    // Profile Dropdown Toggle
-    const profileBtn = document.getElementById('user-profile-btn');
-    const dropdown = document.getElementById('user-dropdown');
-    if (profileBtn && dropdown) {
-      profileBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const isOpen = dropdown.classList.toggle('active');
-        dropdown.style.display = isOpen ? 'flex' : 'none';
-      });
-      document.addEventListener('click', () => {
-        dropdown.classList.remove('active');
-        dropdown.style.display = 'none';
-      });
-    }
-
-    // Sign Out Handler
-    const signOutBtn = document.getElementById('menu-signout');
-    if (signOutBtn) {
-      signOutBtn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        try {
-          if (typeof API !== 'undefined' && API.auth) {
-            await API.auth.logout();
-          }
-        } catch (_) {}
-        localStorage.removeItem('isLoggedIn');
-        localStorage.removeItem('userEmail');
-        localStorage.removeItem('username');
-        localStorage.removeItem('userRole');
-        window.location.href = 'login.html';
-      });
-    }
   }
   initUserSession();
 
@@ -393,24 +360,36 @@ document.addEventListener('DOMContentLoaded', () => {
   if (userProfileBtn && userDropdown) {
     userProfileBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const isOpen = userDropdown.classList.contains('show');
+      const isOpen = userDropdown.classList.contains('show') || userDropdown.classList.contains('active');
       userDropdown.classList.toggle('show', !isOpen);
+      userDropdown.classList.toggle('active', !isOpen);
       userProfileBtn.setAttribute('aria-expanded', !isOpen);
     });
 
-    document.addEventListener('click', () => {
-      userDropdown.classList.remove('show');
-      userProfileBtn.setAttribute('aria-expanded', 'false');
+    document.addEventListener('click', (e) => {
+      if (!userDropdown.contains(e.target) && !userProfileBtn.contains(e.target)) {
+        userDropdown.classList.remove('show');
+        userDropdown.classList.remove('active');
+        userProfileBtn.setAttribute('aria-expanded', 'false');
+      }
     });
   }
 
-  function handleSignOut(e) {
+  async function handleSignOut(e) {
     if (e) e.preventDefault();
+    try {
+      if (typeof API !== 'undefined' && API.auth) {
+        await API.auth.logout();
+      }
+    } catch (_) {}
     localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('username');
+    localStorage.removeItem('userRole');
     showToast('Signed out successfully.', 'info');
     setTimeout(() => {
       window.location.href = 'login.html';
-    }, 600);
+    }, 400);
   }
 
   if (sidebarSignoutBtn) {
