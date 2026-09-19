@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rawUsername = localStorage.getItem('username');
     const email = localStorage.getItem('userEmail') || '';
     const username = rawUsername || (email ? email.split('@')[0] : 'User');
-    const role = (localStorage.getItem('userRole') || 'staff').toLowerCase();
+    const role = (localStorage.getItem('selectedRole') || localStorage.getItem('userRole') || 'staff').toLowerCase();
 
     // Top-right dropdown display
     const nameEls = document.querySelectorAll('#display-account-name, .user-name');
@@ -271,7 +271,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (user) {
         // Sync verified role from server
         localStorage.setItem('userRole', user.role);
-        localStorage.setItem('selectedRole', user.role);
+        if (!localStorage.getItem('selectedRole')) {
+          localStorage.setItem('selectedRole', user.role);
+        }
         localStorage.setItem('userEmail', user.email);
         localStorage.setItem('username', user.username);
         if (displayAccountName) {
@@ -515,6 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.removeItem('userEmail');
     localStorage.removeItem('username');
     localStorage.removeItem('userRole');
+    localStorage.removeItem('selectedRole');
     showToast('Signed out successfully.', 'info');
     setTimeout(() => {
       window.location.href = 'login.html';

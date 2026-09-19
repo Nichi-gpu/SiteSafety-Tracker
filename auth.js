@@ -97,15 +97,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await API.auth.login(identifier, password);
         const user = res.user || {};
 
-        // Determine effective role: prioritize the verified role returned by the server
-        const chosenRole = localStorage.getItem('selectedRole');
-        const effectiveRole = user.role || chosenRole || 'staff';
+        // Determine effective role: prioritize user's explicitly chosen role from landing page
+        const chosenRole = (localStorage.getItem('selectedRole') || '').toLowerCase();
+        let effectiveRole = 'staff';
+
+        if (chosenRole === 'staff') {
+          // Explicitly chose Staff: always route to Staff portal
+          effectiveRole = 'staff';
+        } else if (chosenRole === 'manager') {
+          // Explicitly chose Manager: verify user has manager privileges
+          if (user.role && user.role !== 'manager') {
+            effectiveRole = 'staff';
+            showMessage(loginForm, 'Notice: Your account has Staff privileges only. Directing to Staff portal...', 'info');
+          } else {
+            effectiveRole = 'manager';
+          }
+        } else {
+          // Direct login fallback without landing selection
+          effectiveRole = user.role || 'staff';
+        }
 
         // Persist session info in localStorage
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('userEmail', user.email || identifier);
         localStorage.setItem('username', user.username || identifier);
-        localStorage.setItem('userRole', effectiveRole);
+        localStorage.setItem('userRole', user.role || effectiveRole);
         localStorage.setItem('userCompany', user.company || '');
         localStorage.setItem('signupTime', user.signup_time || '');
         localStorage.setItem('lastLoginTime', user.last_login_time || '');
@@ -113,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         showMessage(loginForm, `Login successful! Welcome back, ${user.username || user.email}!`, 'success');
 
-        // Redirect based on selected / effective role
+        // Redirect based on effective role
         setTimeout(() => {
           if (effectiveRole === 'staff') {
             window.location.href = 'home.html';
