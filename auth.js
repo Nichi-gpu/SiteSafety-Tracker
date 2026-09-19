@@ -217,20 +217,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-          const res = await fetch('/api/auth/forgot-password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
-          });
-
-          const data = await res.json();
-          if (!res.ok) {
-            showForgotAlert(data.error || 'Failed to send verification code.', 'error');
-            return;
+          let data;
+          if (typeof API !== 'undefined' && API.auth && API.auth.forgotPassword) {
+            data = await API.auth.forgotPassword(email);
+          } else {
+            const res = await fetch('/api/auth/forgot-password', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email })
+            });
+            data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to send verification code.');
           }
 
-          activeResetEmail = email;
-          if (forgotTargetEmail) forgotTargetEmail.textContent = email;
+          activeResetEmail = data.email || email;
+          if (forgotTargetEmail) forgotTargetEmail.textContent = data.masked_email || activeResetEmail;
 
           // Transition to Step 2
           forgotStep1.style.display = 'none';
@@ -238,6 +239,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
           if (data.dev_code) {
             showForgotAlert(`Test Code (Dev Mode): ${data.dev_code}`, 'info');
+          } else {
+            showForgotAlert('Code sent! Please check your Inbox and Spam/Junk folder.', 'info');
           }
 
           if (forgotCodeInput) {
@@ -245,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => forgotCodeInput.focus(), 100);
           }
         } catch (err) {
-          showForgotAlert('Cannot connect to server. Please ensure the backend is running.', 'error');
+          showForgotAlert(err.message || 'Cannot connect to server. Please ensure the backend is running.', 'error');
         } finally {
           if (sendBtn) {
             sendBtn.disabled = false;
@@ -285,6 +288,16 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
+        if (!/\d/.test(newPass)) {
+          showForgotAlert('Password must include at least one number (0-9).', 'error');
+          return;
+        }
+
+        if (!/[^a-zA-Z0-9]/.test(newPass)) {
+          showForgotAlert('Password must include at least one special character (!@#$%^&*).', 'error');
+          return;
+        }
+
         if (newPass !== confirmPass) {
           showForgotAlert('Passwords do not match. Please re-enter.', 'error');
           return;
@@ -298,27 +311,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-          const res = await fetch('/api/auth/reset-password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: activeResetEmail,
-              code,
-              new_password: newPass
-            })
-          });
-
-          const data = await res.json();
-          if (!res.ok) {
-            showForgotAlert(data.error || 'Failed to reset password. Check code or request a new one.', 'error');
-            return;
+          let data;
+          if (typeof API !== 'undefined' && API.auth && API.auth.resetPassword) {
+            data = await API.auth.resetPassword(activeResetEmail, code, newPass);
+          } else {
+            const res = await fetch('/api/auth/reset-password', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email: activeResetEmail,
+                code,
+                new_password: newPass
+              })
+            });
+            data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to reset password. Check code or request a new one.');
           }
 
           // Transition to Step 3: Success
           forgotStep2.style.display = 'none';
           forgotStep3.style.display = 'block';
         } catch (err) {
-          showForgotAlert('Network error. Failed to communicate with server.', 'error');
+          showForgotAlert(err.message || 'Network error. Failed to communicate with server.', 'error');
         } finally {
           if (resetBtn) {
             resetBtn.disabled = false;
@@ -366,6 +380,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!isValidEmail(email)) return showError('signup-email', 'Enter a valid email');
       if (!password) return showError('signup-password', 'Password is required');
       if (password.length < 6) return showError('signup-password', 'Min 6 characters');
+      if (!/\d/.test(password)) return showError('signup-password', 'Must contain at least 1 number (0-9)');
+      if (!/[^a-zA-Z0-9]/.test(password)) return showError('signup-password', 'Must contain at least 1 special char (!@#$...)');
       if (!verified) {
         alert('Please check the "Verify account credentials" box to continue.');
         return;

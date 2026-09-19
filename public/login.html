@@ -60,6 +60,15 @@
                 </p>
             </form>
         </div>
+
+        <!-- Lower-Left Back Button -->
+        <a href="index.html" class="auth-panel-back-btn" id="auth-back-btn" title="Back to Home">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span>Back</span>
+        </a>
     </main>
 
     <!-- Forgot Password Modal -->
@@ -82,10 +91,10 @@
 
             <!-- STEP 1: Enter Email Form -->
             <form id="forgot-step1-form">
-                <p class="modal-desc">Enter your registered email address below. We'll send a <strong>6-digit verification code</strong> to verify your identity.</p>
+                <p class="modal-desc">Enter your registered email address or username below. We'll send a <strong>6-digit verification code</strong> to your email.</p>
                 <div class="modal-input-group">
-                    <label class="modal-label" for="forgot-email">Registered Email Address:</label>
-                    <input type="email" id="forgot-email" class="auth-input-pill" placeholder="e.g. user@sitesafety.com" required autocomplete="email">
+                    <label class="modal-label" for="forgot-email">Registered Email or Username:</label>
+                    <input type="text" id="forgot-email" class="auth-input-pill" placeholder="e.g. user@sitesafety.com or username" required autocomplete="username">
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn-modal-secondary" id="forgot-cancel-btn">Cancel</button>
@@ -97,7 +106,7 @@
 
             <!-- STEP 2: Enter Code & New Password Form -->
             <form id="forgot-step2-form" style="display:none;">
-                <p class="modal-desc">Verification code sent to <strong id="forgot-target-email">your email</strong>. Please enter the code and choose a new password.</p>
+                <p class="modal-desc">Verification code sent to <strong id="forgot-target-email">your email</strong>. Please check your Inbox and Spam/Junk folder.</p>
                 
                 <div class="modal-input-group">
                     <label class="modal-label" for="forgot-code">6-Digit Verification Code:</label>
@@ -106,7 +115,7 @@
 
                 <div class="modal-input-group">
                     <label class="modal-label" for="forgot-new-pass">New Password:</label>
-                    <input type="password" id="forgot-new-pass" class="auth-input-pill" placeholder="At least 6 characters" required autocomplete="new-password">
+                    <input type="password" id="forgot-new-pass" class="auth-input-pill" placeholder="Min 6 chars with number & special char*" required autocomplete="new-password">
                 </div>
 
                 <div class="modal-input-group">

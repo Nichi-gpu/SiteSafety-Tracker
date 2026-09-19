@@ -46,8 +46,11 @@
                 </div>
 
                 <!-- Password Input -->
-                <div class="auth-input-group">
-                    <input type="password" id="signup-password" class="auth-input-pill" placeholder="Password*" required autocomplete="new-password">
+                <div class="auth-input-group" style="margin-bottom: 12px;">
+                    <input type="password" id="signup-password" class="auth-input-pill" placeholder="Password (numbers & special chars)*" required autocomplete="new-password">
+                </div>
+                <div class="auth-pass-hint">
+                    At least 6 characters with numbers and special characters (!@#$%...)
                 </div>
 
                 <!-- Verify Checkbox Row -->
@@ -69,6 +72,15 @@
                 </p>
             </form>
         </div>
+
+        <!-- Lower-Left Back Button -->
+        <a href="index.html" class="auth-panel-back-btn" id="auth-back-btn" title="Back to Home">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span>Back</span>
+        </a>
     </main>
 
     <script src="js/api.js"></script>

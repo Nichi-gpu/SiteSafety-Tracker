@@ -72,6 +72,20 @@ const API = (() => {
 
     async me() {
       return request('/auth/me');
+    },
+
+    async forgotPassword(email) {
+      return request('/auth/forgot-password', {
+        method: 'POST',
+        body: { email }
+      });
+    },
+
+    async resetPassword(email, code, new_password) {
+      return request('/auth/reset-password', {
+        method: 'POST',
+        body: { email, code, new_password }
+      });
     }
   };
 

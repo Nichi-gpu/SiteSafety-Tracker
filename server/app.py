@@ -106,6 +106,11 @@ def signup():
         username = email.split('@')[0]
     if len(password) < 6:
         return jsonify({"error": "Password must be at least 6 characters."}), 400
+    import re
+    if not re.search(r'\d', password):
+        return jsonify({"error": "Password must include at least one number (0-9)."}), 400
+    if not re.search(r'[^a-zA-Z0-9]', password):
+        return jsonify({"error": "Password must include at least one special character (e.g. !@#$%^&*)."}), 400
 
     conn = get_db()
     with conn:
@@ -320,7 +325,7 @@ def send_verification_email(to_email, code):
             msg['To'] = to_email
             msg.attach(MIMEText(html_content, 'html'))
 
-            server = smtplib.SMTP(smtp_server, smtp_port)
+            server = smtplib.SMTP(smtp_server, smtp_port, timeout=15)
             server.starttls()
             server.login(smtp_user, smtp_password)
             server.sendmail(smtp_user, to_email, msg.as_string())
@@ -337,15 +342,20 @@ def send_verification_email(to_email, code):
 @app.route('/api/auth/forgot-password', methods=['POST'])
 def forgot_password():
     data = request.json or {}
-    email = data.get('email', '').strip().lower()
+    identifier = data.get('email', '').strip().lower()
 
-    if not email:
-        return jsonify({"error": "Email address is required."}), 400
+    if not identifier:
+        return jsonify({"error": "Email address or username is required."}), 400
 
     conn = get_db()
-    user = conn.execute('SELECT id, username, email FROM users WHERE LOWER(email) = ?', (email,)).fetchone()
+    user = conn.execute(
+        'SELECT id, username, email FROM users WHERE LOWER(email) = ? OR LOWER(username) = ?', 
+        (identifier, identifier)
+    ).fetchone()
     if not user:
-        return jsonify({"error": "No registered account found with that email address."}), 404
+        return jsonify({"error": "No registered account found with that email or username. Please check your spelling or sign up first."}), 404
+
+    target_email = user['email'].lower()
 
     # Generate 6-digit verification code
     code = f"{random.randint(100000, 999999)}"
@@ -355,16 +365,22 @@ def forgot_password():
     with conn:
         conn.execute(
             'INSERT INTO password_resets (email, code, expires_at, used, created_at) VALUES (?, ?, ?, 0, ?)',
-            (email, code, expires_at, now_str)
+            (target_email, code, expires_at, now_str)
         )
 
-    sent, info = send_verification_email(email, code)
+    sent, info = send_verification_email(target_email, code)
 
     # In dev mode (when SMTP is not configured), provide code in response for frictionless testing
     is_dev = not bool(os.environ.get('SMTP_EMAIL'))
+    
+    # Mask email for privacy display
+    parts = target_email.split('@')
+    masked = f"{parts[0][:2]}***@{parts[1]}" if len(parts[0]) > 2 else f"*@{parts[1]}"
+
     resp = {
-        "message": f"Verification code sent to {email}.",
-        "email": email
+        "message": f"Verification code sent to {masked}. Please check your Inbox and Spam/Junk folder.",
+        "email": target_email,
+        "masked_email": masked
     }
     if is_dev:
         resp["dev_code"] = code
@@ -386,6 +402,11 @@ def reset_password():
 
     if len(new_password) < 6:
         return jsonify({"error": "New password must be at least 6 characters long."}), 400
+    import re
+    if not re.search(r'\d', new_password):
+        return jsonify({"error": "New password must include at least one number (0-9)."}), 400
+    if not re.search(r'[^a-zA-Z0-9]', new_password):
+        return jsonify({"error": "New password must include at least one special character (e.g. !@#$%^&*)."}), 400
 
     conn = get_db()
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
