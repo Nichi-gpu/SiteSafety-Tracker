@@ -338,6 +338,7 @@ body {
   stroke: #ffffff;
   stroke-width: 2;
   fill: none;
+  overflow: visible;
 }
 
 .nav-item:hover {

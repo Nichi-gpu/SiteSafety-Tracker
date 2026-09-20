@@ -300,6 +300,53 @@ def me():
         
     return jsonify({"user": dict(user)})
 
+@app.route('/api/auth/profile', methods=['PUT', 'POST'])
+@login_required
+def update_profile():
+    user_id = session.get('userId')
+    data = request.json or {}
+    new_username = data.get('username', '').strip()
+    new_email = data.get('email', '').strip().lower()
+    new_company = data.get('company', '').strip()
+
+    if not new_email:
+        return jsonify({"error": "Email is required."}), 400
+
+    conn = get_db()
+    with conn:
+        existing = conn.execute('SELECT id FROM users WHERE LOWER(email) = ? AND id != ?', (new_email, user_id)).fetchone()
+        if existing:
+            return jsonify({"error": "This email address is already in use by another account."}), 409
+
+        if new_username:
+            existing_u = conn.execute('SELECT id FROM users WHERE LOWER(username) = ? AND id != ?', (new_username.lower(), user_id)).fetchone()
+            if existing_u:
+                return jsonify({"error": "This username is already taken."}), 409
+
+        conn.execute(
+            '''UPDATE users
+               SET username = COALESCE(NULLIF(?, ''), username),
+                   email = ?,
+                   company = ?
+               WHERE id = ?''',
+            (new_username, new_email, new_company, user_id)
+        )
+
+        user = conn.execute(
+            'SELECT id, username, email, role, company, signup_time, last_login_time, login_count FROM users WHERE id = ?',
+            (user_id,)
+        ).fetchone()
+
+        session['username'] = user['username']
+        session['email'] = user['email']
+
+        log_activity('UPDATE_PROFILE', 'SUCCESS', f"User updated profile: {user['username']} ({user['email']})")
+
+    return jsonify({
+        "message": "Profile updated successfully.",
+        "user": dict(user)
+    })
+
 # ── Password Reset & Email Verification ───────────────────
 def send_verification_email(to_email, code):
     """

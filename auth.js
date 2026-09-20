@@ -121,6 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('userEmail', user.email || identifier);
         localStorage.setItem('username', user.username || identifier);
+        localStorage.setItem('userName', user.username || identifier);
         localStorage.setItem('userRole', user.role || effectiveRole);
         localStorage.setItem('userCompany', user.company || '');
         localStorage.setItem('signupTime', user.signup_time || '');

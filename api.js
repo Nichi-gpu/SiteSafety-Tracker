@@ -74,6 +74,13 @@ const API = (() => {
       return request('/auth/me');
     },
 
+    async updateProfile({ username, email, company }) {
+      return request('/auth/profile', {
+        method: 'PUT',
+        body: { username, email, company }
+      });
+    },
+
     async forgotPassword(email) {
       return request('/auth/forgot-password', {
         method: 'POST',

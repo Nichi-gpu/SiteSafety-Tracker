@@ -59,7 +59,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function initUserSession() {
     const rawUsername = localStorage.getItem('username');
     const email = localStorage.getItem('userEmail') || '';
-    const username = rawUsername || (email ? email.split('@')[0] : 'User');
+    let storedName = localStorage.getItem('userName');
+    if (storedName === 'Safety Manager Andrei' || storedName === 'Manager Andrei') {
+      localStorage.removeItem('userName');
+      storedName = null;
+    }
+    const username = storedName || rawUsername || (email ? email.split('@')[0] : 'User');
     const role = (localStorage.getItem('selectedRole') || localStorage.getItem('userRole') || 'staff').toLowerCase();
 
     // Top-right dropdown display
@@ -249,10 +254,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Display user's account name if logged in
   if (displayAccountName) {
-    const emailToUse = userEmail || (selectedRole === 'manager' ? 'manager@sitesafety.com' : 'andrei@sitesafety.com');
-    const username = emailToUse.split('@')[0];
-    const formattedName = username.charAt(0).toUpperCase() + username.slice(1);
-    displayAccountName.textContent = formattedName || 'Account Name';
+    const storedName = localStorage.getItem('userName');
+    const storedUsername = localStorage.getItem('username');
+    const emailPrefix = userEmail ? userEmail.split('@')[0] : '';
+    const chosenName = storedName || storedUsername || emailPrefix || (selectedRole === 'manager' ? 'Administrator' : 'User');
+    const formattedName = chosenName.charAt(0).toUpperCase() + chosenName.slice(1);
+    displayAccountName.textContent = formattedName;
   }
 
   // Update role badge/label
@@ -269,17 +276,34 @@ document.addEventListener('DOMContentLoaded', () => {
     API.auth.me().then(res => {
       const user = res.user;
       if (user) {
-        // Sync verified role from server
+        const prevUser = localStorage.getItem('username');
+        if (prevUser && prevUser !== user.username) {
+          localStorage.removeItem('userName');
+        }
+        let storedName = localStorage.getItem('userName');
+        if (storedName === 'Safety Manager Andrei' || storedName === 'Manager Andrei') {
+          localStorage.removeItem('userName');
+          storedName = null;
+        }
+
         localStorage.setItem('userRole', user.role);
         if (!localStorage.getItem('selectedRole')) {
           localStorage.setItem('selectedRole', user.role);
         }
         localStorage.setItem('userEmail', user.email);
         localStorage.setItem('username', user.username);
+        if (user.company) localStorage.setItem('userCompany', user.company);
+
         if (displayAccountName) {
-          const name = user.username || user.email.split('@')[0];
+          const name = storedName || user.username || user.email.split('@')[0];
           displayAccountName.textContent = name.charAt(0).toUpperCase() + name.slice(1);
         }
+
+        // Live populate settings form if on a settings page
+        if (typeof populateProfileSettings === 'function') {
+          populateProfileSettings(user);
+        }
+        initUserSession();
         // If staff tries to access an administrator page, redirect them to staff home
         const isManagerPage = window.location.pathname.includes('manager-');
         if (isManagerPage && user.role !== 'manager') {
@@ -516,7 +540,10 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userEmail');
     localStorage.removeItem('username');
+    localStorage.removeItem('userName');
     localStorage.removeItem('userRole');
+    localStorage.removeItem('userCompany');
+    localStorage.removeItem('userAvatar');
     localStorage.removeItem('selectedRole');
     showToast('Signed out successfully.', 'info');
     setTimeout(() => {
@@ -1474,27 +1501,53 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Populate Profile form data
-  if (settingsEmail) {
-    const savedEmail = localStorage.getItem('userEmail') || (selectedRole === 'manager' ? 'manager@sitesafety.com' : 'andrei@sitesafety.com');
-    const rawUsername = localStorage.getItem('userUsername') || savedEmail.split('@')[0];
-    const defaultName = rawUsername.charAt(0).toUpperCase() + rawUsername.slice(1);
-    const savedName = localStorage.getItem('userName') || (selectedRole === 'manager' ? 'Safety Manager Andrei' : defaultName);
-    const savedCompany = localStorage.getItem('userCompany') || 'Apex Construction Ltd.';
+  // Dynamic Profile Form Data Population (both Manager and Staff)
+  function populateProfileSettings(userObj = null) {
+    const emailEl = settingsEmail || document.getElementById('settings-email');
+    const nameEl = settingsName || document.getElementById('settings-name');
+    const usernameEl = settingsUsername || document.getElementById('settings-username');
+    const companyEl = settingsCompany || document.getElementById('settings-company');
+    const displayProfileName = profileDisplayName || document.getElementById('profile-display-name');
+    const displayProfileMeta = profileDisplayMeta || document.getElementById('profile-display-meta');
+    const avatarBox = avatarDisplay || document.getElementById('settings-avatar-display');
+
+    if (!emailEl && !nameEl && !usernameEl && !displayProfileName) return;
+
+    // Retrieve active user fields from userObj, then localStorage
+    const liveUsername = userObj?.username || localStorage.getItem('username') || '';
+    const liveEmail = userObj?.email || localStorage.getItem('userEmail') || '';
+    const liveCompany = userObj?.company || localStorage.getItem('userCompany') || '';
+    const currentRole = (localStorage.getItem('selectedRole') || userObj?.role || localStorage.getItem('userRole') || 'staff').toLowerCase();
+    
+    let storedName = localStorage.getItem('userName');
+    if (storedName === 'Safety Manager Andrei' || storedName === 'Manager Andrei') {
+      localStorage.removeItem('userName');
+      storedName = null;
+    }
+
+    const effectiveUsername = liveUsername || (liveEmail ? liveEmail.split('@')[0] : 'User');
+    const effectiveDisplayName = storedName || (effectiveUsername ? (effectiveUsername.charAt(0).toUpperCase() + effectiveUsername.slice(1)) : 'User');
+    const effectiveCompany = liveCompany || (currentRole === 'manager' ? 'Safety Management Division' : 'Site Safety Operations');
+    const roleBadge = (currentRole === 'manager' || currentRole === 'admin') ? 'Administrator' : 'Reporting Personnel';
+
+    if (nameEl) nameEl.value = effectiveDisplayName;
+    if (usernameEl) usernameEl.value = effectiveUsername;
+    if (emailEl) emailEl.value = liveEmail;
+    if (companyEl) companyEl.value = liveCompany;
+
+    if (displayProfileName) displayProfileName.textContent = effectiveDisplayName;
+    if (displayProfileMeta) {
+      displayProfileMeta.innerHTML = `${escapeHTML(effectiveCompany)} • <span class="badge-role-mini">${escapeHTML(roleBadge)}</span>`;
+    }
+
     const savedAvatar = localStorage.getItem('userAvatar');
-
-    if (settingsName) settingsName.value = savedName;
-    if (settingsUsername) settingsUsername.value = rawUsername;
-    settingsEmail.value = savedEmail;
-    if (settingsCompany) settingsCompany.value = savedCompany;
-
-    if (profileDisplayName) profileDisplayName.textContent = savedName;
-    if (profileDisplayMeta) profileDisplayMeta.innerHTML = `${savedCompany} • <span class="badge-role-mini">Active</span>`;
-
-    if (savedAvatar && avatarDisplay) {
-      avatarDisplay.innerHTML = `<img src="${savedAvatar}" alt="Profile avatar">`;
+    if (savedAvatar && avatarBox) {
+      avatarBox.innerHTML = `<img src="${savedAvatar}" alt="Profile avatar">`;
     }
   }
+
+  // Initial population of settings fields
+  populateProfileSettings();
 
   // Avatar upload simulation with local storage preview
   if (btnEditAvatar && avatarFileInput) {
@@ -1523,7 +1576,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Save Profile Form
+  // Save Profile Form (synced to database and localStorage)
   if (settingsForm) {
     settingsForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -1538,17 +1591,28 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       localStorage.setItem('userName', updatedName);
-      if (updatedUsername) localStorage.setItem('userUsername', updatedUsername);
+      if (updatedUsername) localStorage.setItem('username', updatedUsername);
       localStorage.setItem('userEmail', updatedEmail);
       if (updatedCompany) localStorage.setItem('userCompany', updatedCompany);
 
-      if (profileDisplayName) profileDisplayName.textContent = updatedName;
-      if (profileDisplayMeta) profileDisplayMeta.innerHTML = `${updatedCompany || 'SiteSafety Systems'} • <span class="badge-role-mini">Active</span>`;
-      
-      const displayAccountName = document.getElementById('display-account-name');
-      if (displayAccountName) displayAccountName.textContent = updatedName;
+      // Save to SQLite database via backend API
+      if (typeof API !== 'undefined' && API.auth && typeof API.auth.updateProfile === 'function') {
+        API.auth.updateProfile({
+          username: updatedUsername || updatedName,
+          email: updatedEmail,
+          company: updatedCompany
+        }).then(res => {
+          showToast('Profile settings saved and synced to database!', 'success');
+        }).catch(err => {
+          console.warn('Profile sync warning:', err.message);
+          showToast('Profile settings saved successfully!', 'success');
+        });
+      } else {
+        showToast('Profile settings saved successfully!', 'success');
+      }
 
-      showToast('Profile settings saved successfully!', 'success');
+      populateProfileSettings({ username: updatedUsername || updatedName, email: updatedEmail, company: updatedCompany });
+      initUserSession();
     });
   }
 
