@@ -1369,7 +1369,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Expose global helper for adding inspections dynamically
-    window.addInspectionItem = function(newItem) {
+    window.addInspectionItem = async function(newItem) {
       // 1. Save to Inspections Store
       const inspections = getStoredInspections();
       inspections.unshift(newItem);
@@ -1953,7 +1953,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Action: Mark Resolved
   if (btnHazardResolved) {
-    btnHazardResolved.addEventListener('click', () => {
+    btnHazardResolved.addEventListener('click', async () => {
       const ticketToResolve = activeHazardTicket || (detailTicketNumber ? detailTicketNumber.textContent : null);
       if (!ticketToResolve) return;
 
