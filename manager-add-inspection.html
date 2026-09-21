@@ -284,7 +284,7 @@
             }
 
             if (addForm) {
-                addForm.addEventListener('submit', (e) => {
+                addForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
 
                     const title = document.getElementById('insp-title').value.trim();
@@ -304,9 +304,9 @@
                         timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     }
 
-                    // Prepend new inspection into inspectionsData if window.addInspectionItem is exposed or via event
+                    // Prepend new inspection into inspectionsData and sync to DB
                     if (window.addInspectionItem) {
-                        window.addInspectionItem({
+                        await window.addInspectionItem({
                             title: title || 'Inspection',
                             location: location || 'Site Location',
                             inspector: inspector || 'Inspector',

@@ -905,7 +905,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const cancelReportBtn = document.getElementById('btn-cancel-report');
 
   if (reportForm) {
-    reportForm.addEventListener('submit', (e) => {
+    reportForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const location = document.getElementById('report-location')?.value.trim();
@@ -952,9 +952,13 @@ document.addEventListener('DOMContentLoaded', () => {
       allHazards.unshift(reportData);
       saveStoredHazards(allHazards);
 
-      // Record to SQLite database
+      // Record to SQLite database (await to ensure backend completes before redirect)
       if (window.API && window.API.hazards && typeof window.API.hazards.create === 'function') {
-        window.API.hazards.create(reportData).catch(e => console.warn('Sync hazard to DB:', e.message));
+        try {
+          await window.API.hazards.create(reportData);
+        } catch (err) {
+          console.warn('Sync hazard to DB warning:', err.message);
+        }
       }
 
       // Add system activity notification
@@ -963,7 +967,7 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast(`Report ${ticketNumber} created successfully! Redirecting...`, 'success');
       setTimeout(() => {
         window.location.href = 'report-status.html';
-      }, 700);
+      }, 500);
     });
   }
 
@@ -1405,10 +1409,18 @@ document.addEventListener('DOMContentLoaded', () => {
       // 3. Reflect strictly to database (both inspections and hazards tables)
       if (window.API) {
         if (window.API.inspections && typeof window.API.inspections.create === 'function') {
-          window.API.inspections.create(newItem).catch(e => console.warn('Sync inspection to DB:', e.message));
+          try {
+            await window.API.inspections.create(newItem);
+          } catch (e) {
+            console.warn('Sync inspection to DB warning:', e.message);
+          }
         }
         if (window.API.hazards && typeof window.API.hazards.create === 'function') {
-          window.API.hazards.create(inspectionHazard).catch(e => console.warn('Sync inspection hazard to DB:', e.message));
+          try {
+            await window.API.hazards.create(inspectionHazard);
+          } catch (e) {
+            console.warn('Sync inspection hazard to DB warning:', e.message);
+          }
         }
       }
 
@@ -1955,7 +1967,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Record resolution in SQLite database
         if (window.API && window.API.hazards && typeof window.API.hazards.resolve === 'function') {
-          window.API.hazards.resolve(ticketToResolve).catch(e => console.warn('Sync resolve to DB:', e.message));
+          try {
+            await window.API.hazards.resolve(ticketToResolve);
+          } catch (e) {
+            console.warn('Sync resolve to DB warning:', e.message);
+          }
         }
 
         addNotification(`Hazard Ticket ${ticketToResolve} Marked as Resolved`, { ticket: ticketToResolve });
@@ -1965,7 +1981,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (window.location.pathname.includes('manager-hazard-detail.html')) {
         setTimeout(() => {
           window.location.href = 'manager-resolved.html';
-        }, 700);
+        }, 500);
       } else {
         closeHazardDetail();
         renderPendingHazards();
